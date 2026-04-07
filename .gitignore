@@ -3,6 +3,8 @@
 .env.local
 .env.*.local
 
+MEMORIA_PROJETO.md
+
 # Virtual Environment
 venv/
 ENV/
@@ -50,3 +52,5 @@ backup/
 # Arquivos do MongoDB Dump
 dump/
 restore/
+
+

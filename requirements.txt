@@ -1,0 +1,6 @@
+# Este MVP nao depende de bibliotecas externas de Python.
+# O script usa apenas a biblioteca padrao.
+#
+# Importante:
+# - o `mongosh` precisa ser instalado separadamente na maquina
+# - o `mongosh` nao entra neste arquivo porque nao e um pacote Python
