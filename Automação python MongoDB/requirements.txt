@@ -1,0 +1,10 @@
+# Nenhuma dependencia Python obrigatoria para V1.0
+# O script usa apenas bibliotecas padrao do Python:
+# - os
+# - subprocess
+# - tempfile
+# - zipfile
+# - datetime
+
+# O mongosh (MongoDB Shell) deve estar instalado no sistema
+# Download: https://www.mongodb.com/try/download/shell

@@ -1,0 +1,88 @@
+GUIA RAPIDO - AUTOMACAO MONGODB V1.0
+=====================================
+
+1. REQUISITOS
+-------------
+- Python 3.x
+- mongosh (MongoDB Shell)
+
+Verificar mongosh:
+mongosh --version
+
+Se nao tiver, baixe em:
+https://www.mongodb.com/try/download/shell
+
+
+2. CONFIGURACAO
+---------------
+Edite o arquivo automacao_mongodb_v1.py e ajuste:
+
+MONGODB_URI = "mongodb://localhost:27017"
+MONGODB_DATABASE = "smartbill"
+
+
+3. EXECUTAR
+-----------
+python automacao_mongodb_v1.py
+
+
+4. FLUXO
+--------
+1. Rodar o script
+2. Informar caminho do .zip ou .txt
+3. Escolher: [1] Simular ou [2] Executar
+4. Se simular: ver comandos na tela
+5. Decidir se quer executar de verdade
+6. Digitar EXECUTAR para confirmar
+
+
+5. EXEMPLO
+----------
+$ python automacao_mongodb_v1.py
+
+============================================================
+AUTOMACAO MONGODB V1.0 - SUSTENTACAO B2C
+============================================================
+
+[1] Informe o caminho do arquivo (.zip ou .txt)
+
+Arquivo: C:\lotes\abril.zip
+
+[OK] Arquivo lido: comandos.txt
+[OK] 5 linha(s) de comando encontrada(s)
+
+[2] O que deseja fazer?
+    [1] Simular (ver comandos)
+    [2] Executar direto
+    [0] Sair
+
+Opcao: 1
+
+
+6. FORMATOS ACEITOS
+-------------------
+Arquivo .zip:
+- Contendo um ou mais .txt com comandos
+
+Arquivo .txt:
+- Comandos MongoDB diretos, um por linha
+
+Exemplo de comandos:
+db.clientes.updateMany({"status": "pendente"}, {"$set": {"status": "ok"}})
+db.faturas.updateOne({"numero": "FAT-001"}, {"$set": {"pago": true}})
+
+
+7. IMPORTANTE
+-------------
+- SEMPRE simule antes de executar
+- Se o arquivo vier errado, devolva ao desenvolvimento
+- Nao existe rollback automatico
+- A sustentacao executa, nao valida logica
+
+
+8. ARQUIVOS
+-----------
+automacao_mongodb_v1.py  <- Script principal
+MEMORIA_PROJETO.md       <- Memoria tecnica
+README.md                <- Documentacao
+GUIA_RAPIDO.txt         <- Este arquivo
