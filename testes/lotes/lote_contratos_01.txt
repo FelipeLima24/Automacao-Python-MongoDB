@@ -1,11 +1,3 @@
-// ============================================================
-// LOTE CONTRATOS - SUSTENTACAO FATURAMENTO B2C
-// Data: 07/04/2026
-// Solicitante: Time de Desenvolvimento
-// Ticket: SUP-2026-04-0848
-// Descricao: Ajustes de status e datas de contratos
-// ============================================================
-
 // BLOCO 1: Ativacao de contratos aprovados pendentes de liberacao
 db.contratos.updateOne({numeroContrato: "CTR-2026-00001"}, {$set: {status: "ativo", dataAtivacao: new Date("2026-04-07"), ativadoPor: "sistema", motivoAtivacao: "aprovacao_credito"}})
 db.contratos.updateOne({numeroContrato: "CTR-2026-00002"}, {$set: {status: "ativo", dataAtivacao: new Date("2026-04-07"), ativadoPor: "sistema", motivoAtivacao: "documentacao_completa"}})

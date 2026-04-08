@@ -1,11 +1,3 @@
-// ============================================================
-// LOTE FATURAS - SUSTENTACAO FATURAMENTO B2C
-// Data: 07/04/2026
-// Solicitante: Time de Desenvolvimento
-// Ticket: SUP-2026-04-0849
-// Descricao: Processamento de faturas do ciclo março/abril 2026
-// ============================================================
-
 // BLOCO 1: Atualizacao de status de faturas pendentes para processado
 db.faturas.updateOne({numeroFatura: "FAT-2026-03-00001"}, {$set: {status: "processado", dataProcessamento: new Date("2026-04-07"), processadoPor: "sistema_batch"}})
 db.faturas.updateOne({numeroFatura: "FAT-2026-03-00002"}, {$set: {status: "processado", dataProcessamento: new Date("2026-04-07"), processadoPor: "sistema_batch"}})

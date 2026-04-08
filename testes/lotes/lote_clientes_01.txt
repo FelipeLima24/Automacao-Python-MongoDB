@@ -1,11 +1,3 @@
-// ============================================================
-// LOTE CLIENTES - SUSTENTACAO FATURAMENTO B2C
-// Data: 07/04/2026
-// Solicitante: Time de Desenvolvimento
-// Ticket: SUP-2026-04-0847
-// Descricao: Correcao de dados cadastrais e status de clientes
-// ============================================================
-
 // BLOCO 1: Atualizacao de status de clientes inadimplentes regularizados
 db.clientes.updateOne({cpf: "123.456.789-01"}, {$set: {status: "ativo", inadimplente: false, dataRegularizacao: new Date("2026-04-05"), motivoRegularizacao: "pagamento_acordo"}})
 db.clientes.updateOne({cpf: "234.567.890-12"}, {$set: {status: "ativo", inadimplente: false, dataRegularizacao: new Date("2026-04-05"), motivoRegularizacao: "pagamento_boleto"}})

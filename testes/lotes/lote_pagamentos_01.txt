@@ -1,11 +1,3 @@
-// ============================================================
-// LOTE PAGAMENTOS - SUSTENTACAO FATURAMENTO B2C
-// Data: 07/04/2026
-// Solicitante: Time de Desenvolvimento
-// Ticket: SUP-2026-04-0850
-// Descricao: Conciliacao e processamento de pagamentos abril/2026
-// ============================================================
-
 // BLOCO 1: Confirmacao de pagamentos via PIX (retorno bancario)
 db.pagamentos.updateOne({transacaoId: "PIX-2026-04-07-000001"}, {$set: {status: "confirmado", dataConfirmacao: new Date("2026-04-07T08:15:32Z"), bancoOrigem: "260", nomeOrigem: "NUBANK", valorConfirmado: 299.90}})
 db.pagamentos.updateOne({transacaoId: "PIX-2026-04-07-000002"}, {$set: {status: "confirmado", dataConfirmacao: new Date("2026-04-07T08:22:45Z"), bancoOrigem: "077", nomeOrigem: "INTER", valorConfirmado: 199.90}})

@@ -1,9 +1,3 @@
-// ============================================================
-// DADOS BASE - CARGA INICIAL PARA TESTES
-// Este arquivo cria documentos de exemplo para que os
-// comandos de update possam funcionar corretamente
-// ============================================================
-
 // CLIENTES - Dados de exemplo
 db.clientes.insertMany([
     {cpf: "123.456.789-01", nome: "Joao Silva", email: "joao.antigo@email.com", status: "inadimplente", inadimplente: true, codigoRegiao: "11", telefoneDesatualizado: true},
