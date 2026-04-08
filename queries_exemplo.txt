@@ -1,3 +1,6 @@
+
+db.document.updateMany({ "customer.document": "11111111111111", "document.barCode": "000000000000000000000000000000000000000000000000", "document.flProForma": false }, { $set: { "customer.accountNumber": "99999999999" } });
+
 db.clientes.updateMany({"statusCadastro": "pendente"}, {"$set": {"statusCadastro": "ativo", "origemAjuste": "lote_mvp"}})
 db.clientes.updateOne({"documento": "12345678900"}, {"$set": {"segmento": "premium", "canalAtualizacao": "sustentacao"}}, {"upsert": false})
 db.faturas.updateMany({"status": "pendente", "competencia": "2026-03"}, {"$set": {"status": "emitida", "atualizadoPor": "lote_mvp"}})
