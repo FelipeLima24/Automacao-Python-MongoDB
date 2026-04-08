@@ -16,6 +16,8 @@ PARA EXECUTAR DE VERDADE:
 - A maquina precisa ter o mongosh instalado
 
 SE O ARQUIVO VIER QUEBRADO: Devolva ao desenvolvimento.
+
+**Mais informações no arquivo: DOCUMENTACAO_TECNICA.txt**
 """
 
 import os
@@ -252,12 +254,12 @@ def menu():
 
         confirma = input("Digite EXECUTAR para confirmar: ").strip()
 
-        if confirma == "EXECUTAR": 
+        if confirma == "EXECUTAR":
             executar(conteudo)
         elif confirma == "executar":
             executar(conteudo)
-        elif confirma == "sim" or "SIM" or "s":
-            executar(conteudo)    
+        elif confirma.lower() in {"sim", "s"}:
+            executar(conteudo)
         else:
             print("\nCancelado.")
 

@@ -1,6 +1,5 @@
-# Este MVP nao depende de bibliotecas externas de Python.
-# O script usa apenas a biblioteca padrao.
-#
-# Importante:
-# - o `mongosh` precisa ser instalado separadamente na maquina
-# - o `mongosh` nao entra neste arquivo porque nao e um pacote Python
+# V1 usa apenas biblioteca padrao do Python e depende do mongosh instalado.
+# V2 demonstra uma abordagem direta via driver Python.
+
+# Driver oficial MongoDB para Python.
+pymongo==4.6.0
