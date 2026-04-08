@@ -4,6 +4,8 @@
 .env.*.local
 
 MEMORIA_PROJETO.md
+COMANDOS_MONGODB.txt
+RELATORIO_FINAL.txt
 
 # Virtual Environment
 venv/

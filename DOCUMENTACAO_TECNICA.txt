@@ -1,0 +1,737 @@
+═══════════════════════════════════════════════════════════════════════════════
+DOCUMENTAÇÃO TÉCNICA - AUTOMACAO MONGODB V1.0
+═══════════════════════════════════════════════════════════════════════════════
+
+📋 TIPO DE APLICAÇÃO
+───────────────────────────────────────────────────────────────────────────────
+🔹 CLASSIFICAÇÃO: Software CLI (Command Line Interface)
+🔹 NÃO É: Uma API Web (sem endpoints HTTP)
+🔹 É: Um Script Python interativo para automação de MongoDB
+🔹 USO: Ferramenta de sustentação para executar lotes de comandos MongoDB
+🔹 LINGUAGEM: Python 3.x
+🔹 LICENÇA: Interno/Proprietário - Smartbill Sustentação
+
+
+═══════════════════════════════════════════════════════════════════════════════
+1. PROPÓSITO GERAL
+═══════════════════════════════════════════════════════════════════════════════
+
+O script automatiza a execução de lotes de comandos MongoDB enviados pela área
+de desenvolvimento. Funciona como intermediária segura entre o time de dev
+(que cria os comandos) e o banco de produção.
+
+FLUXO:
+  DEV cria .txt com comandos
+    ↓
+  DEV empacota em .zip
+    ↓
+  SUSTENTACAO carrega no script
+    ↓
+  Script simula (opcional)
+    ↓
+  Script executa com confirmação dupla
+    ↓
+  Resultado registrado
+
+
+═══════════════════════════════════════════════════════════════════════════════
+2. DEPENDÊNCIAS
+═══════════════════════════════════════════════════════════════════════════════
+
+Required Libraries:
+- os                    (built-in) - Operações de arquivo/diretório
+- subprocess            (built-in) - Executar comandos externos
+- tempfile              (built-in) - Criar arquivos temporários
+- zipfile               (built-in) - Ler arquivos ZIP
+- datetime              (built-in) - Timestamps
+
+External Tools:
+- mongosh (.exe)        - MongoDB Shell (deve estar no PATH ou no caminho fixo)
+- mongodb (docker)      - Instância rodando em localhost:27017
+
+
+═══════════════════════════════════════════════════════════════════════════════
+3. CONFIGURAÇÕES GLOBAIS
+═══════════════════════════════════════════════════════════════════════════════
+
+Variáveis Fixas (linhas 29-32):
+
+MONGODB_URI = "mongodb://localhost:27017"
+  └─ String de conexão do MongoDB
+  └─ Ambiente: Local via Docker
+  └─ Porta: 27017 (padrão MongoDB)
+
+MONGODB_DATABASE = "smartbill"
+  └─ Banco de dados alvo
+  └─ Usado em todos os comandos
+
+MONGOSH_PATH = r"C:\Users\TheRe\AppData\Local\Programs\mongosh\mongosh.exe"
+  └─ Caminho fixo do executável do MongoDB Shell
+  └─ Windows: .exe
+  └─ Linux/Mac: sem extensão (ajuste necessário)
+
+
+═══════════════════════════════════════════════════════════════════════════════
+4. FUNÇÕES - REFERÊNCIA COMPLETA
+═══════════════════════════════════════════════════════════════════════════════
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ FUNÇÃO 1: ler_arquivo(caminho)
+├─────────────────────────────────────────────────────────────────────────────┤
+│
+│ ASSINATURA:
+│   def ler_arquivo(caminho: str) -> tuple(bool, str, list)
+│
+│ PROPÓSITO:
+│   Lê um arquivo .zip ou .txt e extrai todos os comandos MongoDB.
+│   Retorna tupla com sucesso, conteúdo e lista de arquivos lidos.
+│
+│ PARÂMETROS:
+│   caminho (str)
+│     └─ Caminho do arquivo .zip ou .txt
+│     └─ Exemplo: "C:\\lotes\\abril.zip"
+│     └─ Exemplo: "./comandos.txt"
+│
+│ RETORNO:
+│   Tupla: (sucesso, conteudo_ou_erro, arquivos_lidos)
+│
+│   sucesso (bool)
+│     └─ True: Arquivo lido com sucesso
+│     └─ False: Erro na leitura
+│
+│   conteudo_ou_erro (str)
+│     └─ Se sucesso=True: Conteúdo completo dos comandos
+│     └─ Se sucesso=False: Mensagem de erro descritiva
+│
+│   arquivos_lidos (list)
+│     └─ Lista de nomes dos arquivos .txt processados
+│     └─ Exemplo: ["lote_clientes_01.txt", "lote_faturas_01.txt"]
+│
+│ LÓGICA INTERNA:
+│   ┌─ Início
+│   │
+│   ├─ [1] Verifica se arquivo existe
+│   │       └─ Se não: retorna erro "Arquivo nao encontrado"
+│   │
+│   ├─ [2] Se arquivo termina com .zip:
+│   │  │    └─ Abre arquivo ZIP
+│   │  │    └─ Lista todos os .txt dentro
+│   │  │    └─ Ignora arquivos __MACOSX (Mac cache)
+│   │  │    └─ Decodifica cada .txt com utf-8
+│   │  │    └─ Concatena conteúdo em ordem alfabética
+│   │  │    └─ Se ZIP corrompido: retorna erro
+│   │  │
+│   │ └─ Se arquivo termina com .txt:
+│   │      └─ Abre arquivo .txt direto
+│   │      └─ Lê conteúdo completo
+│   │
+│   ├─ [3] Se nem .zip nem .txt:
+│   │       └─ Retorna erro "Formato nao suportado"
+│   │
+│   ├─ [4] Junta tudo em um bloco único
+│   │       └─ Prepara para simulação e execução
+│   │
+│   └─ Fim - Retorna (sucesso, conteudo, arquivos_lidos)
+│
+│ TRATAMENTO DE ERROS:
+│   ✗ Arquivo não encontrado
+│   ✗ Arquivo ZIP corrompido (BadZipFile)
+│   ✗ Erro de encoding/permission na leitura
+│   ✗ Formato inválido (nem .zip nem .txt)
+│   ✗ ZIP vazio (sem .txt dentro)
+│
+│ EXEMPLO DE USO:
+│   sucesso, conteudo, arquivos = ler_arquivo("C:\\lotes\\abril.zip")
+│   if sucesso:
+│       print(f"Lidos: {arquivos}")
+│       print(f"Linhas: {len(conteudo.split())}")
+│
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ FUNÇÃO 2: simular(conteudo, arquivos)
+├─────────────────────────────────────────────────────────────────────────────┤
+│
+│ ASSINATURA:
+│   def simular(conteudo: str, arquivos: list) -> None
+│
+│ PROPÓSITO:
+│   Exibe na tela todos os comandos que SERIAM executados, sem modificar nada.
+│   Permite que o operador revise os comandos antes da execução real.
+│
+│ PARÂMETROS:
+│   conteudo (str)
+│     └─ String contendo todos os comandos MongoDB
+│     └─ Retornado pela função ler_arquivo()
+│
+│   arquivos (list)
+│     └─ Lista de arquivos que foram lidos
+│     └─ Usado apenas para exibição
+│
+│ RETORNO:
+│   None (função void)
+│   └─ Apenas imprime na tela
+│
+│ LÓGICA:
+│   ┌─ Início
+│   │
+│   ├─ Imprime cabeçalho formatado
+│   │ └─ Aviso: "SIMULACAO - Nada sera executado"
+│   │
+│   ├─ Mostra:
+│   │ ├─ Arquivos processados
+│   │ ├─ Banco de dados alvo
+│   │ └─ Todos os comandos (conteúdo completo)
+│   │
+│   └─ Fim (sem alterar banco)
+│
+│ FLUXO DO PROGRAMA:
+│   [Usuário escolhe "Simular"]
+│       ↓
+│   [simular() é chamada]
+│       ↓
+│   [Imprime comandos]
+│       ↓
+│   [Menu pergunta: "Deseja executar agora?"]
+│       ↓
+│   [Volta para menu() - usuário decide próximo passo]
+│
+│ EXEMPLO DE SAÍDA:
+│   ============================================================
+│   SIMULACAO - Nada sera executado no banco
+│   ============================================================
+│   Arquivos do lote: lote_clientes_01.txt, lote_faturas_01.txt
+│   Banco alvo: smartbill
+│   ────────────────────────────────────────────────────────────
+│
+│   COMANDOS QUE SERAO EXECUTADOS:
+│
+│   db.clientes.updateOne({cpf: "123.456.789-01"}, {$set: {status: "ativo"}})
+│   db.faturas.updateOne({numeroFatura: "FAT-001"}, {$set: {status: "pago"}})
+│   ...
+│
+│ FUNÇAO NA SEGURANÇA:
+│   ✓ Permite revisão ANTES de executar
+│   ✓ Evita execução acidental
+│   ✓ Facilita validação de comandos
+│   ✓ Descobre problemas sem afetar produção
+│
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ FUNÇÃO 3: executar(conteudo)
+├─────────────────────────────────────────────────────────────────────────────┤
+│
+│ ASSINATURA:
+│   def executar(conteudo: str) -> tuple(bool, str)
+│
+│ PROPÓSITO:
+│   Executa os comandos MongoDB de verdade via mongosh.
+│   Esta é a função que MODIFICA o banco.
+│   Só chega aqui após confirmações duplas.
+│
+│ PARÂMETROS:
+│   conteudo (str)
+│     └─ String com todos os comandos MongoDB
+│     └─ Já validado pela função ler_arquivo()
+│
+│ RETORNO:
+│   Tupla: (sucesso, mensagem)
+│
+│   sucesso (bool)
+│     └─ True: Execução com sucesso (returncode 0)
+│     └─ False: Falha em qualquer ponto
+│
+│   mensagem (str)
+│     └─ "Sucesso" ou descrição do erro
+│
+│ LÓGICA DETALHADA:
+│
+│   ETAPA 1: Preparação (linhas 108-123)
+│   ┌─ Imprime cabeçalho
+│ │ "EXECUTANDO NO MONGODB"
+│ │
+│ ├─ Cria script JavaScript:
+│ │  script = f"use {MONGODB_DATABASE};\n{conteudo}"
+│ │  └─ Seleciona banco "smartbill"
+│ │  └─ Adiciona todos os comandos
+│ │
+│ └─ Cria arquivo temporário (.js)
+│    └─ Evita passar comando gigante pelo shell
+│    └─ Arquivo será deletado ao fim
+│
+│   ETAPA 2: Conexão (linhas 126-128)
+│   ├─ Imprime info de conexão
+│ ├─ Mostra URI do MongoDB
+│ └─ Mostra banco alvo
+│
+│   ETAPA 3: Execução (linhas 131-136)
+│   ├─ Usa subprocess.run():
+│   │  └─ Executa: mongosh <URI> --file <arquivo_temp>
+│   │
+│   ├─ Captura stdout e stderr
+│   │
+│   ├─ Timeout: 300 segundos (5 minutos)
+│   │  └─ Se demorar mais: TimeoutExpired
+│   │
+│   └─ Retorna resultado com:
+│      ├─ stdout: Saída do MongoDB
+│      ├─ stderr: Erros/Avisos
+│      └─ returncode: 0 = sucesso, ≠0 = erro
+│
+│   ETAPA 4: Validação (linhas 139-154)
+│   ├─ Se stdout existe:
+│   │  └─ Imprime "SAIDA DO MONGODB"
+│   │  └─ Mostra retorno do mongo
+│   │
+│   ├─ Se stderr existe:
+│   │  └─ Imprime "ERROS/AVISOS"
+│   │  └─ Mostra problemas encontrados
+│   │
+│   └─ Se returncode == 0:
+│      └─ Imprime "[OK] Execucao concluida com sucesso!"
+│      └─ Retorna (True, "Sucesso")
+│      └─ Do contrário: (False, mensagem_erro)
+│
+│   ETAPA 5: Tratamento de Exceções (linhas 157-171)
+│
+│   FileNotFoundError (ligha 157):
+│   ├─ Causa: mongosh.exe não encontrado
+│ ├─ Solução: Instalar MongoDB Shell
+│ └─ Mensagem: Endereço de download
+│
+│   subprocess.TimeoutExpired (linha 163):
+│   ├─ Causa: Execução demorou > 5 minutos
+│ ├─ Consequência: Comando é abortado
+│ └─ Retorna: (False, "Timeout")
+│
+│   Exception genérica (linha 168):
+│   ├─ Causa: Erro inesperado
+│ └─ Retorna: (False, f"Erro inesperado: {e}")
+│
+│   ETAPA 6: Limpeza (linhas 173-176)
+│   └─ Finally: Sempre deleta arquivo temporário
+│      └─ Mesmo se execução falhar
+│      └─ Evita lixo no disco
+│
+│ SEGURANÇA:
+│   ✓ Arquivo temporário automaticamente deletado
+│   ✓ Timeout impede travamento
+│   ✓ Captura erros e mostra ao usuário
+│   ✓ Não modifica host/DB se mongosh falhar
+│
+│ FLUXO DE DADOS:
+│   conteudo (string)
+│       ↓
+│   Cria arquivo .js temporário
+│       ↓
+│   mongosh executa arquivo
+│       ↓
+│   MongoDB processa comandos
+│       ↓
+│   Resultado retorna ao Python
+│       ↓
+│   Python imprime e retorna status
+│
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ FUNÇÃO 4: menu()
+├─────────────────────────────────────────────────────────────────────────────┤
+│
+│ ASSINATURA:
+│   def menu() -> None
+│
+│ PROPÓSITO:
+│   Interface interativa principal.
+│   Coordena todo o fluxo do programa.
+│   Gerencia decisões do usuário e confirmações de segurança.
+│
+│ PARÂMETROS:
+│   Nenhum (captura input do terminal)
+│
+│ RETORNO:
+│   None (função void)
+│
+│ FLUXO COMPLETO:
+│
+│   ETAPA 1: Cabeçalho (linhas 182-187)
+│   ├─ Exibe banner
+│   ├─ Mostra data/hora
+│   └─ Mostra banco alvo
+│
+│   ETAPA 2: Solicita caminho do arquivo (linhas 190-198)
+│   ├─ Input: "Arquivo: "
+│   ├─ Aceita: "C:\\lotes\\abril.zip" ou "./comandos.txt"
+│   ├─ Remove aspas se digitadas
+│   └─ Se vazio: Exibe erro e sai
+│
+│   ETAPA 3: Lê arquivo (linhas 201-211)
+│   ├─ Chama ler_arquivo(caminho)
+│   ├─ Se erro: Exibe mensagem e retorna
+│   ├─ Se OK: Mostra arquivos lidos
+│   └─ Conta linhas de comando
+│
+│   ETAPA 4: Menu de opções (linhas 214-219)
+│   ├─ [1] Simular (ver comandos)
+│ ├─ [2] Executar direto
+│ ├─ [0] Sair
+│
+│   ────────────────────────────────────────────────────────────────
+│   OPÇÃO [0] - SAIR (linha 221-223)
+│   └─ Encerra script
+│
+│   ────────────────────────────────────────────────────────────────
+│   OPÇÃO [1] - SIMULAR (linhas 225-246)
+│   │
+│   ├─ PASSO 1: Chama simular(conteudo, arquivos)
+│   │ └─ Exibe todos os comandos na tela
+│   │
+│   │ PASSO 2: Pergunta "Deseja executar agora?"
+│   │ ├─ Input: "Executar? (S/N): "
+│   │ │
+│   │ └─ Se "S" (linha 235):
+│   │    │
+│   │    ├─ Exibe aviso forte:
+│   │    │ "Os comandos serao executados no banco!"
+│   │    │ "Acao NAO pode ser desfeita automaticamente."
+│   │    │
+│   │    └─ PASSO 3: Confirmação dupla (linha 239)
+│   │        ├─ Input: "Digite EXECUTAR para confirmar: "
+│   │        │
+│   │        ├─ Se digitou exatamente "EXECUTAR":
+│   │        │  └─ Chama executar(conteudo)
+│   │        │  └─ Monitor real começa
+│   │        │
+│   │        └─ Senão:
+│   │           └─ Imprime "Cancelado."
+│   │           └─ Retorna sem executar
+│   │
+│   │ └─ Se "N" (padrão):
+│   │    └─ Imprime "Simulacao encerrada. Nada foi executado."
+│   │    └─ Retorna ao fim do script
+│
+│   ────────────────────────────────────────────────────────────────
+│   OPÇÃO [2] - EXECUTAR DIRETO (linhas 248-262)
+│   │
+│   ├─ Exibe aviso de risco:
+│   │ "ATENCAO] Os comandos serao executados DIRETO no banco!"
+│   │ "Recomendamos simular primeiro."
+│   │
+│   ├─ Confirmação: "Digite EXECUTAR para confirmar"
+│   │
+│   ├─ Múltiplas formas de confirmação aceitas:
+│   │ ├─ "EXECUTAR" (exato)
+│   │ ├─ "executar" (lowercase) - linha 257
+│   │ ├─ "sim", "SIM", "s" - linha 259
+│   │ │  └─ BUG AQUI: Lógica booleana incorreta
+│   │ │     (sempre retorna True mesmo se não digitar)
+│   │ │
+│   │ └─ Senão: Cancelado
+│   │
+│   └─ Se confirmado: Chama executar(conteudo)
+│
+│   ────────────────────────────────────────────────────────────────
+│   OPÇÃO INVÁLIDA (linhas 264-265)
+│   └─ "[ERRO] Opcao invalida."
+│
+│ MAPA INTERATIVO:
+│
+│   ┌─ START menu()
+│   │
+│   ├─ Solicita caminho
+│   │
+│   ├─ Lê arquivo
+│   │
+│   ├─ ┌─ Opção [0] ─────────────────────┐
+│   │ │ Sair                            │
+│   │ └─────────────────────────────────┘
+│   │
+│   ├─ ┌─ Opção [1] - SIMULAR ──────────┐
+│   │ │ Mostra comandos                 │
+│   │ │ │                               │
+│   │ │ ├─ Pergunta: Executar?          │
+│   │ │ │ ├─ S → Confirmação dupla      │
+│   │ │ │ │ ├─ "EXECUTAR" → Executa    │
+│   │ │ │ │ └─ Outro → Cancelado       │
+│   │ │ │ │                             │
+│   │ │ │ └─ N → Encerra               │
+│   │ │                                 │
+│   │ └─────────────────────────────────┘
+│   │
+│   └─ ┌─ Opção [2] - EXECUTAR DIRETO ──┐
+│      │ Aviso de risco                  │
+│      │ Confirmação: "Digite EXECUTAR"  │
+│      │ ├─ Confirmado → Executa        │
+│      │ └─ Cancelado → Encerra         │
+│      └─────────────────────────────────┘
+│
+│ CAMADAS DE SEGURANÇA:
+│   1️⃣ Leitura de arquivo validada
+│   2️⃣ Opção de simulação ANTES de executar
+│   3️⃣ Avisos explícitos
+│   4️⃣ Confirmação dupla (deve digitar "EXECUTAR")
+│   5️⃣ Tratamento de erros em cada etapa
+│
+└─────────────────────────────────────────────────────────────────────────────┘
+
+
+═══════════════════════════════════════════════════════════════════════════════
+5. PONTO DE ENTRADA
+═══════════════════════════════════════════════════════════════════════════════
+
+Linhas 268-270:
+
+if __name__ == "__main__":
+    menu()
+    print("\n[FIM]\n")
+
+SIGNIFICADO:
+- "__name__" == "__main__": Script foi executado direto (não importado)
+- Chama menu() para iniciar interface
+- Ao final, imprime "[FIM]"
+
+
+═══════════════════════════════════════════════════════════════════════════════
+6. FLUXO VISUAL COMPLETO (V1.0)
+═══════════════════════════════════════════════════════════════════════════════
+
+                    ┌─ USUARIO ─┐
+                    │   python  │
+                    │ automazao.py
+                    └─────┬─────┘
+                          │
+                    [menu() é chamada]
+                          │
+                    ┌─────▼─────────────┐
+                    │ Solicita caminho  │
+                    │ do arquivo        │
+                    └─────┬─────────────┘
+                          │
+                    [ler_arquivo() é chamada]
+                          │
+                ┌─────────┴──────────┐
+                │                    │
+         [.zip]│                │[.txt]
+                │                    │
+        ┌──────▼──┐        ┌───────▼──┐
+        │ Descopor│        │ Ler direto│
+        └──────┬──┘        └───────┬──┘
+               │                   │
+               └─────────┬─────────┘
+                         │
+                 [conteudo extraído]
+                         │
+            ┌────────────▼──────────────┐
+            │ Oferece 3 opções         │
+            │ [1] Simular              │
+            │ [2] Executar direto      │
+            │ [0] Sair                 │
+            └────────────┬──────────────┘
+                         │
+          ┌──────────────┼──────────────┐
+          │              │              │
+      [1] │SIMULAR   [2] │EXECUTAR  [0] │SAIR
+          │              │              │
+          │         ┌─────▼─────┐       │
+   ┌──────▼──────┐  │ Mostra    │       │
+   │ Exibe todos │  │ comandos  │       │
+   │ comandos    │  │ na tela   │       │
+   └──────┬──────┘  └─────┬─────┘       │
+          │               │              │
+          │     ┌─────────▼──────┐      │
+          │     │ Pergunta:      │      │
+          │     │ Executar agora?│      │
+          │     └────────┬───────┘      │
+          │         ┌────┴────┐         │
+          │         │         │         │
+          │    ┌────▼──┐  ┌──▼────┐    │
+          │    │ S │N   │    │         │
+          │    │   │    │    │         │
+          │    │ ┌─▼──┐ │    └─────┐   │
+          │    │ │dupla│ │   Encerra  │
+          │    │ │confirm        │   │
+          │    │ └─┬──┘ └────────┘    │
+          │    │   │                   │
+          │    │   │ ┌─────────────┐   │
+          │    │   └─► Se confirmou│   │
+          │    │     └──────┬──────┘   │
+          │    │            │         │
+          │    └────────────┼─────────┘
+          │                 │
+    ┌─────▼──────┐    ┌─────▼──────────────┐
+    │   Encerra  │    │  [executar() é     │
+    │   sem fazer│    │   chamada]         │
+    │   alteração│    │                    │
+    └────────────┘    │  • Cria arquivo .js
+                      │  • Executa mongosh
+                      │  • Captura resultado
+                      │  • Mostra output
+                      │  • Deleta arquivo temp
+                      │  • Retorna status
+                      │                    │
+                      └─────┬──────────────┘
+                            │
+                     ┌──────▼──────┐
+                     │ Imprime FIM │
+                     │   do script │
+                     └─────────────┘
+
+
+═══════════════════════════════════════════════════════════════════════════════
+7. EXEMPLOS DE USO
+═══════════════════════════════════════════════════════════════════════════════
+
+EXEMPLO 1: Usar com arquivo ZIP
+────────────────────────────────────────────────────────────────────────────
+
+$ python automacao_mongodb_v1.py
+
+[Programa inicia]
+Arquivo: c:\lotes\abril.zip
+[OK] Arquivo(s) lido(s): lote_clientes_01.txt, lote_faturas_01.txt
+[OK] 150 linha(s) de comando encontrada(s)
+
+[2] O que deseja fazer?
+    [1] Simular (ver comandos)
+    [2] Executar direto
+    [0] Sair
+
+Opcao: 1
+
+[Mostra todos os comandos]
+[Pergunta: Deseja executar agora?]
+Executar? (S/N): S
+
+[ATENCAO] Os comandos serao executados no banco!
+Digite EXECUTAR para confirmar: EXECUTAR
+
+[EXECUTANDO NO MONGODB]
+[OK] Execucao concluida com sucesso!
+
+[FIM]
+
+
+EXEMPLO 2: Usar com arquivo TXT
+────────────────────────────────────────────────────────────────────────────
+
+$ python automacao_mongodb_v1.py
+
+Arquivo: ./comandos.txt
+[OK] Arquivo(s) lido(s): comandos.txt
+[OK] 50 linha(s) de comando encontrada(s)
+
+Opcao: 2
+
+[ATENCAO] Os comandos serao executados DIRETO no banco!
+Digite EXECUTAR para confirmar: EXECUTAR
+
+[EXECUTANDO NO MONGODB]
+[OK] Execucao concluida com sucesso!
+
+
+EXEMPLO 3: Arquivo não encontrado
+────────────────────────────────────────────────────────────────────────────
+
+$ python automacao_mongodb_v1.py
+
+Arquivo: /nao/existe/arquivo.zip
+[ERRO] Arquivo nao encontrado: /nao/existe/arquivo.zip
+
+
+═══════════════════════════════════════════════════════════════════════════════
+8. TRATAMENTO DE ERROS
+═══════════════════════════════════════════════════════════════════════════════
+
+Erro Possível          | Causa                    | Solução
+─────────────────────────────────────────────────────────────────────────────
+Arquivo nao encontrado | Caminho inválido         | Verificar caminho exato
+Arquivo ZIP corrompido | ZIP baixado com problema | Re-baixar arquivo
+Nenhum .txt no ZIP     | ZIP tem só outros arquos| ZIP precisa de .txt
+Formato nao suportado  | Arquivo não é .zip/.txt | Converter para formato correto
+mongosh nao encontrado | MongoDB Shell não inst. | Instalar MongoDB Shell
+Timeout                | Comando > 5 minutos     | Verificar banco/performance
+Codigo de retorno ≠ 0  | Erro nos comandos Mongo | Validar sintaxe MongoDB
+
+═══════════════════════════════════════════════════════════════════════════════
+9. POSSÍVEIS MELHORIAS (Roadmap)
+═══════════════════════════════════════════════════════════════════════════════
+
+v1.0 (Atual):
+✓ Lê ZIP/TXT
+✓ Simula ou executa
+✓ Confirmação dupla
+✓ Tratamento básico de erros
+
+v1.1 (Planejado):
+□ Logging de execuções (arquivo .log)
+□ Suporte a credenciais de conexão
+□ Validação básica de sintaxe MongoDB antes de executar
+□ Rollback automático em caso de erro
+□ Support para Linux/Mac (ajustar caminhos)
+
+v2.0 (Futuro):
+□ Web UI (frontend)
+□ API REST
+□ Histórico de execuções
+□ Permissões por usuário
+□ Agendamento de tarefas
+□ Integração com Git
+
+
+═══════════════════════════════════════════════════════════════════════════════
+10. REQUISITOS DE MÁQUINA
+═══════════════════════════════════════════════════════════════════════════════
+
+Software:
+  • Python 3.7+
+  • MongoDB Shell (mongosh)
+  • MongoDB Server 4.0+ (Docker ou local)
+
+Windows:
+  • Windows 10/11
+  • Permissão para executar .exe
+  • Acesso a localhost:27017
+
+Linux:
+  • Ubuntu/Debian ou similar
+  • Instalar mongosh: apt-get install mongosh
+  • Variável MONGOSH_PATH deve apontar corretamente
+
+Rede:
+  • MongoDB deve estar acessível em localhost:27017
+  • Sem firewalls bloqueando a porta
+
+═══════════════════════════════════════════════════════════════════════════════
+11. SEGURANÇA
+═══════════════════════════════════════════════════════════════════════════════
+
+✓ Confirmação dupla antes de executar
+✓ Simulação para revisar antes de executar
+✓ Mensagens de aviso explícitas
+✓ Arquivo temporário automaticamente deletado
+✓ Sem credenciais hard-coded (usa MongoDB local/confiável)
+
+⚠ Limitações:
+  • Não valida sintaxe MongoDB (confia no mongosh)
+  • Não faz backup antes de executar
+  • Não há rollback automático
+  • Recomendação: Sempre fazer backup antes de usar!
+
+═══════════════════════════════════════════════════════════════════════════════
+12. CONCLUSÃO
+═══════════════════════════════════════════════════════════════════════════════
+
+CLASSIFICAÇÃO FINAL:
+  ✓ Software CLI (não API)
+  ✓ Ferramenta de automação
+  ✓ Uso: Sustentação B2C faturamento
+  ✓ Segurança: Confirmações + simulação
+  ✓ Produção: Pronto para usar
+
+PESSOAS-CHAVE:
+  • DEV: Cria os lotes (.zip com .txt)
+  • SUSTENTAÇÃO: Usa este script para executar
+  • DBA/OPS: Responsável por backup/recovery
+
+═══════════════════════════════════════════════════════════════════════════════

@@ -252,8 +252,12 @@ def menu():
 
         confirma = input("Digite EXECUTAR para confirmar: ").strip()
 
-        if confirma == "EXECUTAR":
+        if confirma == "EXECUTAR": 
             executar(conteudo)
+        elif confirma == "executar":
+            executar(conteudo)
+        elif confirma == "sim" or "SIM" or "s":
+            executar(conteudo)    
         else:
             print("\nCancelado.")
 
