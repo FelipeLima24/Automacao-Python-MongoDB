@@ -1,79 +1,74 @@
 """
-AUTOMACAO MONGODB V2.0 - EXEMPLO COM PYMONGO
+AUTOMACAO MONGODB V2.0 - EXECUCAO VIA PYMONGO
 
 Objetivo desta versao:
-- mostrar como ficaria uma automacao conectando direto pelo Python;
-- comparar com a V1, que delega a execucao para o mongosh;
-- manter o exemplo didatico e simples.
+- manter a experiencia simples da V1;
+- continuar lendo .zip ou .txt com comandos prontos;
+- simular o lote inteiro na tela;
+- executar pelo proprio Python, sem depender do mongosh.
 
-Diferenca principal para a V1:
-- V1: Python le o lote e chama o mongosh;
-- V2: Python le o lote, interpreta as linhas suportadas e executa usando PyMongo.
-
-Limitacoes desta V2:
-- aceita apenas updateOne e updateMany;
-- espera argumentos em JSON/EJSON estrito;
-- nao tenta interpretar qualquer sintaxe livre de JavaScript do shell.
+Ponto importante:
+- o texto do arquivo continua vindo no formato do shell MongoDB;
+- para o PyMongo executar, o Python precisa extrair o minimo necessario
+  de cada linha: collection, metodo, filtro e update.
+- isso nao significa "validar regra de negocio"; significa apenas
+  transformar a linha em algo que o driver Python consiga executar.
 """
 
 from __future__ import annotations
 
+import json
 import os
 import re
 import zipfile
+from dataclasses import dataclass
 from datetime import datetime
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
 
-from bson import json_util
 from pymongo import MongoClient
 from pymongo.errors import PyMongoError, ServerSelectionTimeoutError
 
-# Configuracao fixa, igual ao MVP anterior.
+# Configuracao fixa, espelhando o estilo simples da V1.
 MONGODB_URI = "mongodb://localhost:27017"
 MONGODB_DATABASE = "smartbill"
 
-# O regex extrai:
-# - nome da collection
-# - metodo (updateOne ou updateMany)
-# - argumentos entre parenteses
-COMMAND_PATTERN = re.compile(
-    r"^\s*db\.(?P<colecao>[A-Za-z_][A-Za-z0-9_]*)\.(?P<metodo>updateOne|updateMany)\s*\((?P<argumentos>.*)\)\s*;?\s*$"
+# Aceitamos apenas os dois updates usados no processo.
+COMANDO_PATTERN = re.compile(
+    r"^\s*db\.(?P<colecao>[A-Za-z_][A-Za-z0-9_]*)\.(?P<metodo>updateOne|updateMany)\s*\((?P<argumentos>.*)\)\s*;\s*$"
 )
 
-# Traducao do nome da option do texto para o nome esperado pelo PyMongo.
-SUPPORTED_OPTION_KEYS = {
-    "upsert": "upsert",
-    "hint": "hint",
-    "comment": "comment",
-    "collation": "collation",
-    "arrayFilters": "array_filters",
-    "bypassDocumentValidation": "bypass_document_validation",
-    "let": "let",
-}
 
-
-def ler_arquivo(caminho: str) -> Tuple[bool, List[Tuple[str, int, str]], List[str] | str]:
+@dataclass
+class ComandoMongo:
     """
-    Le .zip ou .txt e devolve uma lista de linhas uteis.
+    Estrutura minima para o Python executar o comando.
 
-    Retorno em caso de sucesso:
-    - True
-    - lista de tuplas (arquivo_origem, numero_linha, comando)
-    - lista de arquivos lidos
+    Analogia com Java:
+    - pense nesta classe como um objeto simples de transporte de dados;
+    - ela guarda o que foi lido do arquivo ja separado em partes.
+    """
 
-    Retorno em caso de erro:
-    - False
-    - []
-    - mensagem de erro
+    arquivo: str
+    linha: int
+    texto_original: str
+    colecao: str
+    metodo: str
+    filtro: dict
+    atualizacao: dict | list
+
+
+def ler_arquivo(caminho: str):
+    """
+    Le arquivo .zip ou .txt e retorna conteudo dos comandos.
+    Retorna tupla: (sucesso, conteudo_ou_erro, lista_arquivos)
     """
 
     if not os.path.exists(caminho):
-        return False, [], f"Arquivo nao encontrado: {caminho}"
+        return False, f"Arquivo nao encontrado: {caminho}", []
 
-    linhas_comandos: List[Tuple[str, int, str]] = []
-    arquivos_lidos: List[str] = []
+    conteudo_total = []
+    arquivos_lidos = []
 
+    # No ZIP, junta todos os .txt na ordem do nome para manter o lote previsivel.
     if caminho.lower().endswith(".zip"):
         try:
             with zipfile.ZipFile(caminho, "r") as zf:
@@ -84,51 +79,82 @@ def ler_arquivo(caminho: str) -> Tuple[bool, List[Tuple[str, int, str]], List[st
                 ]
 
                 if not arquivos_txt:
-                    return False, [], "Nenhum .txt encontrado no ZIP"
+                    return False, "Nenhum .txt encontrado no ZIP", []
 
                 for nome in arquivos_txt:
                     conteudo = zf.read(nome).decode("utf-8", errors="replace")
+                    conteudo_total.append(conteudo)
                     arquivos_lidos.append(nome)
-                    for numero_linha, linha in enumerate(conteudo.splitlines(), start=1):
-                        linha_limpa = linha.strip()
-                        if linha_limpa:
-                            linhas_comandos.append((nome, numero_linha, linha_limpa))
 
         except zipfile.BadZipFile:
-            return False, [], "Arquivo ZIP corrompido"
+            return False, "Arquivo ZIP corrompido", []
 
+    # Se vier um .txt solto, le exatamente esse arquivo.
     elif caminho.lower().endswith(".txt"):
         try:
             with open(caminho, "r", encoding="utf-8") as arquivo:
                 conteudo = arquivo.read()
-            nome_arquivo = os.path.basename(caminho)
-            arquivos_lidos.append(nome_arquivo)
-            for numero_linha, linha in enumerate(conteudo.splitlines(), start=1):
-                linha_limpa = linha.strip()
-                if linha_limpa:
-                    linhas_comandos.append((nome_arquivo, numero_linha, linha_limpa))
-        except Exception as erro:  # noqa: BLE001
-            return False, [], f"Erro ao ler arquivo: {erro}"
+            conteudo_total.append(conteudo)
+            arquivos_lidos.append(os.path.basename(caminho))
+        except OSError as erro:
+            return False, f"Erro ao ler arquivo: {erro}", []
 
     else:
-        return False, [], "Formato nao suportado. Use .zip ou .txt"
+        return False, "Formato nao suportado. Use .zip ou .txt", []
 
-    return True, linhas_comandos, arquivos_lidos
+    # Junta tudo em um unico bloco, igual a V1, para facilitar simulacao.
+    texto_final = "\n".join(conteudo_total)
+    return True, texto_final, arquivos_lidos
 
 
-def dividir_argumentos(argumentos: str) -> List[str]:
+def simular(conteudo: str, arquivos: list[str]) -> None:
+    """Mostra o lote na tela sem alterar o banco."""
+
+    print("\n" + "=" * 60)
+    print("SIMULACAO V2 - Nada sera executado no banco")
+    print("=" * 60)
+    print(f"Arquivos do lote: {', '.join(arquivos)}")
+    print(f"Banco alvo: {MONGODB_DATABASE}")
+    print("-" * 60)
+    print("\nCOMANDOS QUE SERAO EXECUTADOS:\n")
+    print(conteudo)
+    print("\n" + "-" * 60)
+    print("FIM DA SIMULACAO")
+    print("=" * 60)
+
+
+def obter_linhas_comando(conteudo: str) -> list[tuple[int, str]]:
     """
-    Divide os argumentos do comando sem quebrar JSON interno.
+    Separa apenas as linhas que realmente parecem comandos.
 
-    Exemplo:
-    updateMany({"a": 1}, {"$set": {"b": 2}}, {"upsert": false})
+    Linhas vazias e comentarios simples sao ignorados.
     """
 
-    partes: List[str] = []
-    atual: List[str] = []
+    linhas_validas = []
+
+    for numero_linha, linha in enumerate(conteudo.splitlines(), start=1):
+        linha_limpa = linha.strip()
+        if not linha_limpa:
+            continue
+        if linha_limpa.startswith("//"):
+            continue
+        linhas_validas.append((numero_linha, linha_limpa))
+
+    return linhas_validas
+
+
+def dividir_argumentos(argumentos: str) -> list[str]:
+    """
+    Divide os argumentos principais do update sem quebrar JSON interno.
+
+    Exemplo de entrada:
+    { ... }, { $set: { ... } }
+    """
+
+    partes = []
+    atual = []
     profundidade_chaves = 0
-    profundidade_listas = 0
-    profundidade_parenteses = 0
+    profundidade_colchetes = 0
     em_string = False
     escape_ativo = False
 
@@ -153,15 +179,11 @@ def dividir_argumentos(argumentos: str) -> List[str]:
         elif caractere == "}":
             profundidade_chaves -= 1
         elif caractere == "[":
-            profundidade_listas += 1
+            profundidade_colchetes += 1
         elif caractere == "]":
-            profundidade_listas -= 1
-        elif caractere == "(":
-            profundidade_parenteses += 1
-        elif caractere == ")":
-            profundidade_parenteses -= 1
+            profundidade_colchetes -= 1
 
-        if caractere == "," and profundidade_chaves == 0 and profundidade_listas == 0 and profundidade_parenteses == 0:
+        if caractere == "," and profundidade_chaves == 0 and profundidade_colchetes == 0:
             partes.append("".join(atual).strip())
             atual = []
             continue
@@ -175,96 +197,97 @@ def dividir_argumentos(argumentos: str) -> List[str]:
     return partes
 
 
-def mapear_opcoes(opcoes: Dict[str, Any]) -> Tuple[bool, Dict[str, Any] | str]:
-    """Converte options do texto para kwargs aceitos pelo PyMongo."""
-
-    chaves_invalidas = [chave for chave in opcoes if chave not in SUPPORTED_OPTION_KEYS]
-    if chaves_invalidas:
-        return False, f"Options nao suportadas: {', '.join(chaves_invalidas)}"
-
-    kwargs = {SUPPORTED_OPTION_KEYS[chave]: valor for chave, valor in opcoes.items()}
-    return True, kwargs
-
-
-def parsear_comando(linha: str) -> Tuple[bool, Dict[str, Any] | str]:
+def normalizar_json_mongo(texto: str) -> str:
     """
-    Interpreta uma linha suportada e devolve uma estrutura de dados.
+    Faz o minimo ajuste para o texto do shell virar JSON valido.
 
-    Aqui esta a maior "dificuldade extra" em relacao a V1:
-    como o Python vai executar diretamente, ele precisa entender a linha,
-    e nao apenas repassar o texto para o mongosh.
+    Exemplo:
+    { $set: { "campo": "valor" } }
+    vira:
+    { "$set": { "campo": "valor" } }
     """
 
-    match = COMMAND_PATTERN.match(linha)
+    return re.sub(r'([{,]\s*)(\$[A-Za-z_][A-Za-z0-9_]*)\s*:', r'\1"\2":', texto)
+
+
+def parsear_linha(numero_linha: int, linha: str, arquivo: str) -> ComandoMongo:
+    """
+    Converte uma linha do arquivo em um comando que o PyMongo entende.
+
+    Este e o ponto central da V2.
+    O arquivo chega como texto do shell MongoDB, mas o PyMongo precisa
+    receber objetos Python equivalentes.
+    """
+
+    match = COMANDO_PATTERN.match(linha)
     if not match:
-        return False, "Linha nao esta no formato suportado"
+        raise ValueError(
+            f"Linha {numero_linha} do arquivo {arquivo} nao esta em formato suportado."
+        )
 
-    metodo = match.group("metodo")
     colecao = match.group("colecao")
+    metodo = match.group("metodo")
     argumentos_brutos = match.group("argumentos").strip()
     argumentos = dividir_argumentos(argumentos_brutos)
 
-    if len(argumentos) not in {2, 3}:
-        return False, "Comando precisa ter 2 ou 3 argumentos"
+    if len(argumentos) != 2:
+        raise ValueError(
+            f"Linha {numero_linha} do arquivo {arquivo} deve ter exatamente 2 argumentos."
+        )
 
     try:
-        filtro = json_util.loads(argumentos[0])
-        atualizacao = json_util.loads(argumentos[1])
-    except Exception as erro:  # noqa: BLE001
-        return False, f"Erro ao converter filter/update: {erro}"
+        filtro = json.loads(argumentos[0])
+    except json.JSONDecodeError as erro:
+        raise ValueError(
+            f"Filtro invalido na linha {numero_linha} do arquivo {arquivo}: {erro}"
+        ) from erro
 
-    if not isinstance(filtro, dict):
-        return False, "Filter precisa ser um objeto JSON/EJSON"
+    try:
+        atualizacao = json.loads(normalizar_json_mongo(argumentos[1]))
+    except json.JSONDecodeError as erro:
+        raise ValueError(
+            f"Update invalido na linha {numero_linha} do arquivo {arquivo}: {erro}"
+        ) from erro
 
-    if not isinstance(atualizacao, (dict, list)):
-        return False, "Update precisa ser objeto ou pipeline"
-
-    opcoes: Dict[str, Any] = {}
-    if len(argumentos) == 3:
-        try:
-            opcoes = json_util.loads(argumentos[2])
-        except Exception as erro:  # noqa: BLE001
-            return False, f"Erro ao converter options: {erro}"
-        if not isinstance(opcoes, dict):
-            return False, "Options precisa ser objeto JSON/EJSON"
-
-    sucesso_opcoes, kwargs_ou_erro = mapear_opcoes(opcoes)
-    if not sucesso_opcoes:
-        return False, str(kwargs_ou_erro)
-
-    return True, {
-        "colecao": colecao,
-        "metodo": metodo,
-        "filtro": filtro,
-        "atualizacao": atualizacao,
-        "kwargs": kwargs_ou_erro,
-    }
+    return ComandoMongo(
+        arquivo=arquivo,
+        linha=numero_linha,
+        texto_original=linha,
+        colecao=colecao,
+        metodo=metodo,
+        filtro=filtro,
+        atualizacao=atualizacao,
+    )
 
 
-def simular(linhas_comandos: List[Tuple[str, int, str]]) -> None:
-    """Mostra o lote como seria processado, sem alterar dados."""
-
-    print("\n" + "=" * 60)
-    print("SIMULACAO V2 - PYMONGO")
-    print("=" * 60)
-    print(f"Banco alvo: {MONGODB_DATABASE}")
-    print(f"Total de linhas uteis: {len(linhas_comandos)}")
-    print("-" * 60)
-
-    for arquivo, numero_linha, comando in linhas_comandos:
-        print(f"[{arquivo}:{numero_linha}] {comando}")
-
-    print("-" * 60)
-    print("FIM DA SIMULACAO")
-    print("=" * 60)
-
-
-def executar(linhas_comandos: List[Tuple[str, int, str]]) -> Tuple[bool, str]:
+def preparar_comandos(conteudo: str, arquivos: list[str]) -> list[ComandoMongo]:
     """
-    Executa diretamente pelo driver PyMongo.
+    Parseia todas as linhas do lote antes da execucao.
 
-    Em SQL, isso seria o equivalente a abrir uma conexao com o driver
-    e chamar comandos pelo proprio Python, sem usar um cliente externo.
+    Aqui ainda nao mexemos no banco.
+    A ideia e falhar cedo se algum comando estiver fora do formato combinado.
+    """
+
+    comandos = []
+    arquivo_corrente = arquivos[0] if len(arquivos) == 1 else "lote"
+
+    for numero_linha, linha in obter_linhas_comando(conteudo):
+        comandos.append(parsear_linha(numero_linha, linha, arquivo_corrente))
+
+    return comandos
+
+
+def executar(conteudo: str, arquivos: list[str]):
+    """
+    Executa os comandos no MongoDB usando PyMongo.
+    Retorna tupla: (sucesso, mensagem)
+
+    Diferenca para a V1:
+    - V1 entrega um arquivo .js para o mongosh;
+    - V2 abre a conexao direto no Python e chama update_one/update_many.
+
+    Equivalente ao `use smartbill` do shell:
+    - no PyMongo fazemos `client[MONGODB_DATABASE]`.
     """
 
     print("\n" + "=" * 60)
@@ -272,95 +295,150 @@ def executar(linhas_comandos: List[Tuple[str, int, str]]) -> Tuple[bool, str]:
     print("=" * 60)
 
     try:
-        client = MongoClient(MONGODB_URI, serverSelectionTimeoutMS=5000, connectTimeoutMS=8000)
+        comandos = preparar_comandos(conteudo, arquivos)
+    except ValueError as erro:
+        return False, str(erro)
+
+    try:
+        client = MongoClient(
+            MONGODB_URI,
+            serverSelectionTimeoutMS=5000,
+            connectTimeoutMS=5000,
+        )
         client.admin.command("ping")
         db = client[MONGODB_DATABASE]
     except ServerSelectionTimeoutError as erro:
-        return False, f"Falha ao conectar no MongoDB: {erro}"
+        msg = f"Falha ao conectar no MongoDB: {erro}"
+        print(f"\n[ERRO] {msg}")
+        return False, msg
     except PyMongoError as erro:
-        return False, f"Erro ao abrir conexao MongoDB: {erro}"
+        msg = f"Erro ao abrir conexao MongoDB: {erro}"
+        print(f"\n[ERRO] {msg}")
+        return False, msg
 
     try:
         total_sucesso = 0
+        total_matched = 0
+        total_modified = 0
 
-        for arquivo, numero_linha, linha in linhas_comandos:
-            sucesso_parse, comando_ou_erro = parsear_comando(linha)
-            if not sucesso_parse:
-                return False, f"Erro no parsing [{arquivo}:{numero_linha}]: {comando_ou_erro}"
+        print(f"[INFO] Conectando em: {MONGODB_URI}")
+        print(f"[INFO] Banco: {MONGODB_DATABASE}")
+        print("[INFO] Executando comandos...\n")
 
-            comando = comando_ou_erro
-            colecao = db[comando["colecao"]]
-            kwargs = dict(comando["kwargs"])
+        for comando in comandos:
+            colecao = db[comando.colecao]
 
             try:
-                if comando["metodo"] == "updateMany":
-                    resultado = colecao.update_many(comando["filtro"], comando["atualizacao"], **kwargs)
+                if comando.metodo == "updateMany":
+                    resultado = colecao.update_many(comando.filtro, comando.atualizacao)
                 else:
-                    resultado = colecao.update_one(comando["filtro"], comando["atualizacao"], **kwargs)
+                    resultado = colecao.update_one(comando.filtro, comando.atualizacao)
             except PyMongoError as erro:
-                return False, f"Erro ao executar [{arquivo}:{numero_linha}]: {erro}"
+                msg = (
+                    f"Erro ao executar linha {comando.linha} "
+                    f"({comando.colecao}.{comando.metodo}): {erro}"
+                )
+                print(f"\n[ERRO] {msg}")
+                return False, msg
 
             total_sucesso += 1
+            total_matched += resultado.matched_count
+            total_modified += resultado.modified_count
+
             print(
-                f"[OK] {arquivo}:{numero_linha} | {comando['metodo']} em {comando['colecao']} | "
+                f"[OK] Linha {comando.linha} | "
+                f"{comando.colecao}.{comando.metodo} | "
                 f"matched={resultado.matched_count} modified={resultado.modified_count}"
             )
 
-        return True, f"Execucao concluida com sucesso. Linhas executadas: {total_sucesso}"
+        msg = (
+            f"Execucao concluida com sucesso. "
+            f"Comandos: {total_sucesso} | "
+            f"Matched: {total_matched} | Modified: {total_modified}"
+        )
+        print(f"\n[OK] {msg}")
+        return True, msg
+
     finally:
         client.close()
 
 
-def menu() -> None:
-    """Menu interativo da V2."""
+def menu():
+    """Menu interativo principal da V2, espelhando o fluxo da V1."""
 
     print("\n" + "=" * 60)
-    print("AUTOMACAO MONGODB V2.0 - PYMONGO")
+    print("AUTOMACAO MONGODB V2.0 - SUSTENTACAO B2C")
     print("=" * 60)
     print(f"Data: {datetime.now().strftime('%d/%m/%Y %H:%M')}")
     print(f"Banco: {MONGODB_DATABASE}")
     print("=" * 60)
-    print("OBSERVACAO: esta versao executa direto pelo Python.")
-    print("Ela exige um formato de linha mais controlado do que a V1.\n")
 
-    caminho = input("Arquivo (.zip ou .txt): ").strip().strip('"').strip("'")
+    print("\n[1] Informe o caminho do arquivo (.zip ou .txt)")
+    print("    Exemplo: C:\\lotes\\abril.zip")
+    print("    Exemplo: ./comandos.txt\n")
+
+    caminho = input("Arquivo: ").strip().strip('"').strip("'")
+
     if not caminho:
-        print("\n[ERRO] Caminho vazio.")
+        print("\n[ERRO] Caminho vazio. Saindo.")
         return
 
-    sucesso, linhas_comandos, arquivos_ou_erro = ler_arquivo(caminho)
+    sucesso, conteudo, arquivos = ler_arquivo(caminho)
+
     if not sucesso:
-        print(f"\n[ERRO] {arquivos_ou_erro}")
+        print(f"\n[ERRO] {conteudo}")
         return
 
-    arquivos = arquivos_ou_erro
     print(f"\n[OK] Arquivo(s) lido(s): {', '.join(arquivos)}")
-    print(f"[OK] {len(linhas_comandos)} linha(s) util(eis) encontrada(s)")
 
-    print("\n[1] Simular")
-    print("[2] Executar direto")
-    print("[0] Sair\n")
+    linhas = [linha for linha in conteudo.split("\n") if linha.strip() and not linha.strip().startswith("//")]
+    print(f"[OK] {len(linhas)} linha(s) de comando encontrada(s)")
+
+    print("\n[2] O que deseja fazer?")
+    print("    [1] Simular (ver comandos)")
+    print("    [2] Executar direto")
+    print("    [0] Sair\n")
 
     opcao = input("Opcao: ").strip()
+
     if opcao == "0":
         print("\nSaindo.")
         return
 
     if opcao == "1":
-        simular(linhas_comandos)
-        confirma = input("\nDeseja executar agora? Digite EXECUTAR: ").strip()
-        if confirma == "EXECUTAR":
-            sucesso_execucao, mensagem = executar(linhas_comandos)
-            print(f"\n{'[OK]' if sucesso_execucao else '[ERRO]'} {mensagem}")
+        simular(conteudo, arquivos)
+
+        print("\n[3] Deseja executar agora?")
+        print("    [S] Sim")
+        print("    [N] Nao\n")
+
+        confirma = input("Executar? (S/N): ").strip().upper()
+
+        if confirma == "S":
+            print("\n[ATENCAO] Os comandos serao executados no banco!")
+            print("          Acao NAO pode ser desfeita automaticamente.\n")
+
+            confirma2 = input("Digite EXECUTAR para confirmar: ").strip()
+
+            if confirma2 == "EXECUTAR":
+                executar(conteudo, arquivos)
+            else:
+                print("\nCancelado.")
         else:
-            print("\nCancelado.")
+            print("\nSimulacao encerrada. Nada foi executado.")
+
     elif opcao == "2":
-        confirma = input("\nDigite EXECUTAR para confirmar: ").strip()
-        if confirma == "EXECUTAR":
-            sucesso_execucao, mensagem = executar(linhas_comandos)
-            print(f"\n{'[OK]' if sucesso_execucao else '[ERRO]'} {mensagem}")
+        print("\n[ATENCAO] Os comandos serao executados DIRETO no banco!")
+        print("          Acao NAO pode ser desfeita automaticamente.")
+        print("          Recomendamos simular primeiro.\n")
+
+        confirma = input("Digite EXECUTAR para confirmar: ").strip()
+
+        if confirma in {"EXECUTAR", "executar"}:
+            executar(conteudo, arquivos)
         else:
             print("\nCancelado.")
+
     else:
         print("\n[ERRO] Opcao invalida.")
 
