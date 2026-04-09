@@ -1,178 +1,222 @@
-# Automacao MongoDB - MVP de Sustentacao B2C
+# Automacao MongoDB - Sustentacao B2C
 
-## Contexto do processo atual
+## Visao geral
 
-Hoje a area recebe do desenvolvimento um lote com comandos MongoDB prontos.
-Esse lote pode vir em um arquivo `.txt` ou em um `.zip` contendo varios `.txt`.
+Este projeto automatiza a execucao de lotes de update no MongoDB a partir de arquivos `.txt` ou `.zip`.
 
-No MVP atual, a sustentacao nao monta query, nao faz parser e nao corrige regra de negocio.
-O papel do script e ajudar a abrir o lote, mostrar o que sera executado e disparar a execucao quando o arquivo estiver ok.
+O processo real da area e:
+- o desenvolvimento envia comandos MongoDB prontos;
+- a sustentacao recebe o lote;
+- a sustentacao simula, executa e valida o resultado.
 
-Se o lote vier quebrado, incompleto ou com logica errada, ele deve voltar para o desenvolvimento.
+O banco alvo do projeto e `smartbill`.
 
-## Objetivo do script
+## Versoes do projeto
 
-O script `automacao_mongodb_v1.py` faz quatro coisas:
+### V1
 
-1. Recebe o caminho de um `.txt` ou `.zip`.
-2. Localiza e le o conteudo dos `.txt`.
-3. Mostra os comandos em modo de simulacao.
-4. Executa os comandos no banco `smartbill` usando `mongosh`.
+Arquivo:
+- `scripts/automacao_mongodb_v1.py`
+
+Resumo:
+- preservada sem alteracoes estruturais;
+- le `.txt` e `.zip`;
+- simula ou executa;
+- usa `mongosh`.
+
+Uso ideal:
+- quando voce quer o caminho mais parecido com o processo manual.
+
+### V2
+
+Arquivo:
+- `scripts/automacao_mongodb_v2_pymongo.py`
+
+Resumo:
+- mantém o menu simples da V1;
+- le `.txt` e `.zip`;
+- simula ou executa;
+- usa `pymongo` em vez de `mongosh`;
+- executa `updateOne` e `updateMany` a partir do formato padronizado do lote.
+
+Uso ideal:
+- quando voce quer executar direto pelo Python, sem shell externo.
 
 ## Pre-requisitos
 
-- Python 3.x instalado na maquina
-- `mongosh` instalado e disponivel no `PATH`
-- Acesso ao MongoDB que sera usado na operacao
-- Arquivo `.txt` ou `.zip` enviado pelo desenvolvimento
+- Python 3.x
+- ambiente virtual `venv`
+- MongoDB acessivel em `mongodb://localhost:27017`
+- banco `smartbill`
 
-Para validar se o `mongosh` esta disponivel:
+Para a V1:
+- `mongosh` instalado
 
-```powershell
-mongosh --version
-```
+Para a V2:
+- `pymongo` instalado na `venv`
 
-Download oficial do `mongosh`:
-https://www.mongodb.com/try/download/shell
+## Instalacao
 
-## Criacao do ambiente virtual (venv)
-
-No PowerShell, dentro da pasta do projeto:
+Criar e ativar a `venv`:
 
 ```powershell
 python -m venv venv
 .\venv\Scripts\Activate.ps1
 ```
 
-Se quiser sair do ambiente virtual:
+Instalar dependencias:
 
 ```powershell
-deactivate
+python -m pip install -r requirements.txt
 ```
 
-Se o PowerShell bloquear a ativacao do `venv`, rode:
+## Dependencias
 
-```powershell
-Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
-.\venv\Scripts\Activate.ps1
-```
+Arquivo:
+- `requirements.txt`
 
-## Instalacao das dependencias
+Dependencia atual:
+- `pymongo==4.6.0`
 
-Este MVP nao usa bibliotecas externas de Python.
-Mesmo assim, o fluxo padrao do projeto continua sendo:
+Uso:
+- driver oficial MongoDB para Python;
+- necessario para a V2.
 
-```powershell
-pip install -r requirements.txt
-```
+Observacao:
+- a V1 nao usa biblioteca externa Python para o banco;
+- ela depende do `mongosh`, que deve estar instalado separadamente.
 
-Hoje esse comando nao instala nenhuma lib extra, porque o script usa apenas a biblioteca padrao do Python.
+## Formato do lote
 
-Importante: `mongosh` nao entra no `requirements.txt`, porque ele nao e uma biblioteca Python. Ele precisa ser instalado separadamente na maquina.
+Os arquivos podem vir como:
+- `.txt` unico
+- `.zip` com varios `.txt`
 
-## Configuracao
+Cada linha util do lote contem um comando MongoDB completo.
 
-A conexao esta fixa no topo de [automacao_mongodb_v1.py]
-
-```python
-MONGODB_URI = "mongodb://localhost:27017"
-MONGODB_DATABASE = "smartbill"
-```
-
-Se precisar apontar para outro ambiente, ajuste essas duas constantes.
-
-Observacao: neste MVP o script nao le configuracao do `.env`. A referencia usada na execucao real e a que estiver no topo do arquivo Python.
-
-## Como executar o script
-
-```powershell
-python automacao_mongodb_v1.py
-```
-
-Depois informe o caminho de um arquivo como:
-
-```text
-queries_exemplo.txt
-lote_exemplo.zip
-```
-
-## Como funciona o mini menu
-
-O fluxo do menu é direto:
-
-1. O script pede o caminho do arquivo `.txt` ou `.zip`.
-2. Se for `.zip`, ele procura todos os `.txt` dentro do pacote.
-3. O script mostra quais arquivos foram encontrados e quantas linhas de comando existem.
-4. Voce escolhe entre simular, executar direto ou sair.
-5. Se escolher simular, o script exibe o lote inteiro e pergunta se voce quer executar em seguida.
-6. Se escolher executar, o script pede a confirmacao digitando `EXECUTAR`.
-
-## Diferenca entre simulacao e execucao real
-
-`Simulação`:
-
-- le o arquivo normalmente
-- mostra o conteudo na tela
-- nao altera nada no banco
-
-`Execução real`:
-
-- monta um arquivo temporario `.js`
-- adiciona `use smartbill;` no inicio
-- chama o `mongosh` para rodar o lote no MongoDB
-
-Fluxo recomendado do MVP:
-
-1. Receber o lote do desenvolvimento.
-2. Rodar primeiro em simulacao.
-3. Conferir os comandos e os arquivos encontrados.
-4. Executar de verdade somente depois da confirmacao.
-
-## Formato do arquivo de entrada
-
-Arquivo `.txt`:
-
-- comandos MongoDB em texto simples
-- um comando por linha
-- neste projeto, o lote padrao foi fixado no formato `db.document.updateMany(..., {$set: ...});`
-- a unica variacao permitida fica nos valores de `customer.document`, `document.barCode` e `customer.accountNumber`
-
-Arquivo `.zip`:
-
-- pode conter varios `.txt`
-- o script junta todos os `.txt` encontrados para formar o lote final
-
-Exemplo de comando:
+Formato padrao utilizado nos exemplos atuais:
 
 ```javascript
-db.document.updateMany({"customer.document": "11111111111111", "document.barCode": "000000000000000000000000000000000000000000000000", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999999999"}});
+db.document.updateMany({"customer.document": "11111111110001", "document.barCode": "000000000000000000000000000000000000000000000001", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900001"}});
 ```
 
-## Limitacoes do MVP
+## Como executar
 
-- O script nao valida regra de negocio.
-- O script nao corrige comando enviado pelo desenvolvimento.
-- O script nao faz rollback automatico.
-- O script nao tenta tratar o lote comando a comando.
-- Se o `mongosh` nao estiver instalado, a execucao real nao funciona.
+### V1
 
-## MongoDB Compass vs mongosh
+```powershell
+python .\scripts\automacao_mongodb_v1.py
+```
 
-Hoje a empresa usa o MongoDB Compass de forma manual.
-Esse script nao automatiza cliques no Compass e nao executa o lote por dentro da interface grafica.
+### V2
 
-O MVP usa `mongosh` porque essa e a forma mais simples de pegar os comandos que ja chegam prontos, apontar para o banco `smartbill` e executar sem criar um parser em Python.
+```powershell
+python .\scripts\automacao_mongodb_v2_pymongo.py
+```
 
-Na pratica:
+Ou, para evitar confusao com Python global:
 
-- `MongoDB Compass` pode continuar sendo usado para consulta visual e conferencia manual.
-- `mongosh` e obrigatorio para a execucao real do script.
-- Se a maquina tiver apenas o Compass, a leitura e a simulacao funcionam, mas a execucao real vai falhar quando o script tentar chamar `mongosh`.
+```powershell
+.\venv\Scripts\python.exe .\scripts\automacao_mongodb_v2_pymongo.py
+```
 
-## Arquivos de apoio do MVP
+## Diferenca entre simular e executar
 
-- automacao_mongodb_v1.py: script principal
-- README.md:  documentacao operacional
-- MEMORIA_PROJETO.md: memoria enxuta do MVP
-- queries_exemplo.txt: exemplo de lote em arquivo unico
-- lote_exemplo.zip: exemplo de lote com varios `.txt`
+Simular:
+- le o lote;
+- mostra o conteudo;
+- nao altera o banco.
+
+Executar:
+- conecta no MongoDB;
+- aponta para `smartbill`;
+- executa todos os updates do lote.
+
+## Diagnostico importante validado neste projeto
+
+Um problema real apareceu durante os testes:
+- o arquivo `queries_exemplo.txt` executava updates em `db.document`;
+- mas o banco carregado inicialmente tinha apenas `clientes`, `contratos`, `faturas` e `pagamentos`;
+- a collection `document` estava vazia.
+
+Resultado no `mongosh`:
+
+```javascript
+{
+  acknowledged: true,
+  matchedCount: 0,
+  modifiedCount: 0
+}
+```
+
+Isso nao significa que a query estava errada.
+Significa apenas que nenhum documento foi encontrado pelo filtro.
+
+## Como verificar no mongosh
+
+Entrar no shell:
+
+```powershell
+mongosh
+```
+
+Selecionar o banco:
+
+```javascript
+use smartbill
+```
+
+Ver collections:
+
+```javascript
+show collections
+```
+
+Contar documentos da collection esperada:
+
+```javascript
+db.document.countDocuments({})
+```
+
+Testar o filtro antes do update:
+
+```javascript
+db.document.countDocuments({
+  "customer.document": "11111111110001",
+  "document.barCode": "000000000000000000000000000000000000000000000001",
+  "document.flProForma": false
+})
+```
+
+Interpretacao:
+- `0`: o update nao vai alterar nada;
+- `> 0`: existe ao menos um documento compativel.
+
+## Resultado validado
+
+A V2 foi testada contra o Mongo local em Docker com massa compativel em `db.document`.
+
+Resultado validado:
+- `60` comandos lidos;
+- `60` comandos encontrados;
+- `matched = 60`;
+- `modified = 59`.
+
+O `59` ocorreu porque a primeira linha ja tinha sido atualizada num teste anterior.
+
+## Arquivos principais
+
+- `scripts/automacao_mongodb_v1.py`
+- `scripts/automacao_mongodb_v2_pymongo.py`
+- `queries_exemplo.txt`
+- `MEMORIA_PROJETO.md`
+- `DOCUMENTACAO_TECNICA.txt`
+- `requirements.txt`
+
+## Regras praticas para nao se perder
+
+1. Se a V2 acusar `No module named pymongo`, voce esta usando o Python errado.
+2. Sempre rode a V2 pela `venv`.
+3. Se `matchedCount = 0`, o problema costuma ser massa ou filtro, nao sintaxe.
+4. Se a collection do arquivo nao existir, o lote nao vai produzir efeito.
+5. Nao altere a V1 quando estiver estudando a V2; use as duas como comparacao.
