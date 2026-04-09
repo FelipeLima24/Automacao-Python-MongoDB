@@ -1,75 +1,60 @@
-// BLOCO 1: Atualizacao de status de clientes inadimplentes regularizados
-db.clientes.updateOne({cpf: "123.456.789-01"}, {$set: {status: "ativo", inadimplente: false, dataRegularizacao: new Date("2026-04-05"), motivoRegularizacao: "pagamento_acordo"}})
-db.clientes.updateOne({cpf: "234.567.890-12"}, {$set: {status: "ativo", inadimplente: false, dataRegularizacao: new Date("2026-04-05"), motivoRegularizacao: "pagamento_boleto"}})
-db.clientes.updateOne({cpf: "345.678.901-23"}, {$set: {status: "ativo", inadimplente: false, dataRegularizacao: new Date("2026-04-06"), motivoRegularizacao: "pagamento_pix"}})
-db.clientes.updateOne({cpf: "456.789.012-34"}, {$set: {status: "ativo", inadimplente: false, dataRegularizacao: new Date("2026-04-06"), motivoRegularizacao: "pagamento_cartao"}})
-db.clientes.updateOne({cpf: "567.890.123-45"}, {$set: {status: "ativo", inadimplente: false, dataRegularizacao: new Date("2026-04-07"), motivoRegularizacao: "acordo_parcelado"}})
-
-// BLOCO 2: Correcao de emails invalidos identificados em campanha
-db.clientes.updateOne({_id: ObjectId("661f8a1b2c3d4e5f6a7b8c90")}, {$set: {email: "joao.silva@email.com.br", emailValidado: true, dataValidacaoEmail: new Date("2026-04-07")}})
-db.clientes.updateOne({_id: ObjectId("661f8a1b2c3d4e5f6a7b8c91")}, {$set: {email: "maria.santos@gmail.com", emailValidado: true, dataValidacaoEmail: new Date("2026-04-07")}})
-db.clientes.updateOne({_id: ObjectId("661f8a1b2c3d4e5f6a7b8c92")}, {$set: {email: "carlos.oliveira@outlook.com", emailValidado: true, dataValidacaoEmail: new Date("2026-04-07")}})
-db.clientes.updateOne({_id: ObjectId("661f8a1b2c3d4e5f6a7b8c93")}, {$set: {email: "ana.ferreira@yahoo.com.br", emailValidado: true, dataValidacaoEmail: new Date("2026-04-07")}})
-db.clientes.updateOne({_id: ObjectId("661f8a1b2c3d4e5f6a7b8c94")}, {$set: {email: "pedro.costa@hotmail.com", emailValidado: true, dataValidacaoEmail: new Date("2026-04-07")}})
-db.clientes.updateOne({_id: ObjectId("661f8a1b2c3d4e5f6a7b8c95")}, {$set: {email: "lucia.almeida@email.com.br", emailValidado: true, dataValidacaoEmail: new Date("2026-04-07")}})
-db.clientes.updateOne({_id: ObjectId("661f8a1b2c3d4e5f6a7b8c96")}, {$set: {email: "roberto.lima@gmail.com", emailValidado: true, dataValidacaoEmail: new Date("2026-04-07")}})
-db.clientes.updateOne({_id: ObjectId("661f8a1b2c3d4e5f6a7b8c97")}, {$set: {email: "fernanda.souza@outlook.com", emailValidado: true, dataValidacaoEmail: new Date("2026-04-07")}})
-
-// BLOCO 3: Atualizacao de telefones conforme solicitacao de clientes
-db.clientes.updateMany({codigoRegiao: "11", telefoneDesatualizado: true}, {$set: {ddd: "11", telefoneDesatualizado: false, dataAtualizacaoTelefone: new Date("2026-04-07")}})
-db.clientes.updateMany({codigoRegiao: "21", telefoneDesatualizado: true}, {$set: {ddd: "21", telefoneDesatualizado: false, dataAtualizacaoTelefone: new Date("2026-04-07")}})
-db.clientes.updateMany({codigoRegiao: "31", telefoneDesatualizado: true}, {$set: {ddd: "31", telefoneDesatualizado: false, dataAtualizacaoTelefone: new Date("2026-04-07")}})
-
-// BLOCO 4: Marcacao de clientes para campanha de fidelidade
-db.clientes.updateMany({dataContrato: {$lt: new Date("2024-04-01")}, status: "ativo"}, {$set: {elegivelFidelidade: true, campanhaFidelidade: "FIDELIDADE_2026_Q2"}})
-db.clientes.updateMany({totalContratos: {$gte: 3}, status: "ativo"}, {$set: {clienteOuro: true, beneficioDesconto: 15}})
-db.clientes.updateMany({valorTotalFaturado: {$gte: 10000}, status: "ativo"}, {$set: {clientePremium: true, beneficioDesconto: 20}})
-
-// BLOCO 5: Correcao de enderecos com CEP incorreto (migracao de sistema)
-db.clientes.updateOne({cpf: "111.222.333-44"}, {$set: {endereco: {cep: "01310-100", logradouro: "Av. Paulista", numero: "1578", bairro: "Bela Vista", cidade: "Sao Paulo", uf: "SP"}, enderecoValidado: true}})
-db.clientes.updateOne({cpf: "222.333.444-55"}, {$set: {endereco: {cep: "22041-080", logradouro: "Av. Atlantica", numero: "1702", bairro: "Copacabana", cidade: "Rio de Janeiro", uf: "RJ"}, enderecoValidado: true}})
-db.clientes.updateOne({cpf: "333.444.555-66"}, {$set: {endereco: {cep: "30130-000", logradouro: "Av. Afonso Pena", numero: "1500", bairro: "Centro", cidade: "Belo Horizonte", uf: "MG"}, enderecoValidado: true}})
-db.clientes.updateOne({cpf: "444.555.666-77"}, {$set: {endereco: {cep: "80010-000", logradouro: "Rua XV de Novembro", numero: "700", bairro: "Centro", cidade: "Curitiba", uf: "PR"}, enderecoValidado: true}})
-db.clientes.updateOne({cpf: "555.666.777-88"}, {$set: {endereco: {cep: "90010-000", logradouro: "Rua dos Andradas", numero: "1234", bairro: "Centro Historico", cidade: "Porto Alegre", uf: "RS"}, enderecoValidado: true}})
-
-// BLOCO 6: Atualizacao de preferencias de comunicacao (LGPD)
-db.clientes.updateMany({aceitouLGPD: null}, {$set: {aceitouLGPD: false, dataConsentimento: null, canalPreferido: "nenhum"}})
-db.clientes.updateMany({aceitouLGPD: true, canalPreferido: null}, {$set: {canalPreferido: "email", dataAtualizacaoPreferencia: new Date("2026-04-07")}})
-db.clientes.updateOne({cpf: "666.777.888-99"}, {$set: {aceitouLGPD: true, canalPreferido: "sms", dataConsentimento: new Date("2026-04-01")}})
-db.clientes.updateOne({cpf: "777.888.999-00"}, {$set: {aceitouLGPD: true, canalPreferido: "whatsapp", dataConsentimento: new Date("2026-04-02")}})
-db.clientes.updateOne({cpf: "888.999.000-11"}, {$set: {aceitouLGPD: true, canalPreferido: "email", dataConsentimento: new Date("2026-04-03")}})
-
-// BLOCO 7: Desativacao de clientes com contratos cancelados ha mais de 2 anos
-db.clientes.updateMany({dataUltimoContrato: {$lt: new Date("2024-04-01")}, status: "inativo_pendente"}, {$set: {status: "inativo", motivoInativacao: "tempo_inatividade", dataInativacao: new Date("2026-04-07")}})
-db.clientes.updateMany({contratosAtivos: 0, ultimaFatura: {$lt: new Date("2024-01-01")}}, {$set: {status: "inativo", elegendoReativacao: true}})
-
-// BLOCO 8: Correcao de tipo de pessoa (PF/PJ) cadastrado incorretamente
-db.clientes.updateOne({documento: "12.345.678/0001-90", tipoPessoa: "PF"}, {$set: {tipoPessoa: "PJ", razaoSocial: "Empresa ABC Ltda", nomeFantasia: "ABC Tech"}})
-db.clientes.updateOne({documento: "23.456.789/0001-01", tipoPessoa: "PF"}, {$set: {tipoPessoa: "PJ", razaoSocial: "Comercio XYZ Eireli", nomeFantasia: "XYZ Store"}})
-db.clientes.updateOne({documento: "34.567.890/0001-12", tipoPessoa: "PF"}, {$set: {tipoPessoa: "PJ", razaoSocial: "Servicos Rapidos SA", nomeFantasia: "Fast Services"}})
-
-// BLOCO 9: Atualizacao de score de credito apos analise mensal
-db.clientes.updateMany({scoreCredito: {$lt: 300}, pagamentosEmDia: {$gte: 6}}, {$set: {scoreCredito: 450, dataAtualizacaoScore: new Date("2026-04-07"), motivoAlteracaoScore: "historico_positivo"}})
-db.clientes.updateMany({scoreCredito: {$gte: 700}, inadimplencias: {$gte: 2}}, {$set: {scoreCredito: 500, dataAtualizacaoScore: new Date("2026-04-07"), motivoAlteracaoScore: "inadimplencias_recentes"}})
-db.clientes.updateOne({cpf: "999.000.111-22"}, {$set: {scoreCredito: 800, dataAtualizacaoScore: new Date("2026-04-07"), motivoAlteracaoScore: "cliente_premium"}})
-db.clientes.updateOne({cpf: "000.111.222-33"}, {$set: {scoreCredito: 750, dataAtualizacaoScore: new Date("2026-04-07"), motivoAlteracaoScore: "pagamento_antecipado"}})
-db.clientes.updateOne({cpf: "111.222.333-00"}, {$set: {scoreCredito: 650, dataAtualizacaoScore: new Date("2026-04-07"), motivoAlteracaoScore: "regularizacao_divida"}})
-
-// BLOCO 10: Vinculacao de clientes a novos segmentos de mercado
-db.clientes.updateMany({plano: "basico", valorMensalidade: {$gte: 100}}, {$set: {segmento: "mid_market", categoriaCliente: "B"}})
-db.clientes.updateMany({plano: "premium", valorMensalidade: {$gte: 500}}, {$set: {segmento: "enterprise", categoriaCliente: "A"}})
-db.clientes.updateMany({plano: "starter", valorMensalidade: {$lt: 50}}, {$set: {segmento: "small_business", categoriaCliente: "C"}})
-db.clientes.updateMany({segmento: null}, {$set: {segmento: "nao_classificado", dataAtualizacaoSegmento: new Date("2026-04-07")}})
-
-// BLOCO 11: Flags de processamento para integracao com ERP
-db.clientes.updateMany({sincronizadoERP: false, status: "ativo"}, {$set: {sincronizadoERP: true, dataSincronizacaoERP: new Date("2026-04-07"), versaoSincronizacao: "2.5.1"}})
-db.clientes.updateMany({erroIntegracao: true}, {$set: {erroIntegracao: false, tentativasIntegracao: 0, ultimaTentativa: new Date("2026-04-07")}})
-
-// BLOCO 12: Atualizacao de limites de credito
-db.clientes.updateOne({cpf: "123.123.123-12"}, {$set: {limiteCredito: 5000, dataAtualizacaoLimite: new Date("2026-04-07"), aprovadoPor: "sistema_automatico"}})
-db.clientes.updateOne({cpf: "234.234.234-23"}, {$set: {limiteCredito: 10000, dataAtualizacaoLimite: new Date("2026-04-07"), aprovadoPor: "gerente_regional"}})
-db.clientes.updateOne({cpf: "345.345.345-34"}, {$set: {limiteCredito: 25000, dataAtualizacaoLimite: new Date("2026-04-07"), aprovadoPor: "diretoria"}})
-db.clientes.updateOne({cpf: "456.456.456-45"}, {$set: {limiteCredito: 50000, dataAtualizacaoLimite: new Date("2026-04-07"), aprovadoPor: "diretoria"}})
-db.clientes.updateOne({cpf: "567.567.567-56"}, {$set: {limiteCredito: 3000, dataAtualizacaoLimite: new Date("2026-04-07"), aprovadoPor: "sistema_automatico"}})
-
-// FIM DO LOTE DE CLIENTES
+db.document.updateMany({"customer.document": "11111111110121", "document.barCode": "000000000000000000000000000000000000000000000121", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900121"}});
+db.document.updateMany({"customer.document": "11111111110122", "document.barCode": "000000000000000000000000000000000000000000000122", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900122"}});
+db.document.updateMany({"customer.document": "11111111110123", "document.barCode": "000000000000000000000000000000000000000000000123", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900123"}});
+db.document.updateMany({"customer.document": "11111111110124", "document.barCode": "000000000000000000000000000000000000000000000124", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900124"}});
+db.document.updateMany({"customer.document": "11111111110125", "document.barCode": "000000000000000000000000000000000000000000000125", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900125"}});
+db.document.updateMany({"customer.document": "11111111110126", "document.barCode": "000000000000000000000000000000000000000000000126", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900126"}});
+db.document.updateMany({"customer.document": "11111111110127", "document.barCode": "000000000000000000000000000000000000000000000127", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900127"}});
+db.document.updateMany({"customer.document": "11111111110128", "document.barCode": "000000000000000000000000000000000000000000000128", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900128"}});
+db.document.updateMany({"customer.document": "11111111110129", "document.barCode": "000000000000000000000000000000000000000000000129", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900129"}});
+db.document.updateMany({"customer.document": "11111111110130", "document.barCode": "000000000000000000000000000000000000000000000130", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900130"}});
+db.document.updateMany({"customer.document": "11111111110131", "document.barCode": "000000000000000000000000000000000000000000000131", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900131"}});
+db.document.updateMany({"customer.document": "11111111110132", "document.barCode": "000000000000000000000000000000000000000000000132", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900132"}});
+db.document.updateMany({"customer.document": "11111111110133", "document.barCode": "000000000000000000000000000000000000000000000133", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900133"}});
+db.document.updateMany({"customer.document": "11111111110134", "document.barCode": "000000000000000000000000000000000000000000000134", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900134"}});
+db.document.updateMany({"customer.document": "11111111110135", "document.barCode": "000000000000000000000000000000000000000000000135", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900135"}});
+db.document.updateMany({"customer.document": "11111111110136", "document.barCode": "000000000000000000000000000000000000000000000136", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900136"}});
+db.document.updateMany({"customer.document": "11111111110137", "document.barCode": "000000000000000000000000000000000000000000000137", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900137"}});
+db.document.updateMany({"customer.document": "11111111110138", "document.barCode": "000000000000000000000000000000000000000000000138", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900138"}});
+db.document.updateMany({"customer.document": "11111111110139", "document.barCode": "000000000000000000000000000000000000000000000139", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900139"}});
+db.document.updateMany({"customer.document": "11111111110140", "document.barCode": "000000000000000000000000000000000000000000000140", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900140"}});
+db.document.updateMany({"customer.document": "11111111110141", "document.barCode": "000000000000000000000000000000000000000000000141", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900141"}});
+db.document.updateMany({"customer.document": "11111111110142", "document.barCode": "000000000000000000000000000000000000000000000142", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900142"}});
+db.document.updateMany({"customer.document": "11111111110143", "document.barCode": "000000000000000000000000000000000000000000000143", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900143"}});
+db.document.updateMany({"customer.document": "11111111110144", "document.barCode": "000000000000000000000000000000000000000000000144", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900144"}});
+db.document.updateMany({"customer.document": "11111111110145", "document.barCode": "000000000000000000000000000000000000000000000145", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900145"}});
+db.document.updateMany({"customer.document": "11111111110146", "document.barCode": "000000000000000000000000000000000000000000000146", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900146"}});
+db.document.updateMany({"customer.document": "11111111110147", "document.barCode": "000000000000000000000000000000000000000000000147", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900147"}});
+db.document.updateMany({"customer.document": "11111111110148", "document.barCode": "000000000000000000000000000000000000000000000148", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900148"}});
+db.document.updateMany({"customer.document": "11111111110149", "document.barCode": "000000000000000000000000000000000000000000000149", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900149"}});
+db.document.updateMany({"customer.document": "11111111110150", "document.barCode": "000000000000000000000000000000000000000000000150", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900150"}});
+db.document.updateMany({"customer.document": "11111111110151", "document.barCode": "000000000000000000000000000000000000000000000151", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900151"}});
+db.document.updateMany({"customer.document": "11111111110152", "document.barCode": "000000000000000000000000000000000000000000000152", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900152"}});
+db.document.updateMany({"customer.document": "11111111110153", "document.barCode": "000000000000000000000000000000000000000000000153", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900153"}});
+db.document.updateMany({"customer.document": "11111111110154", "document.barCode": "000000000000000000000000000000000000000000000154", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900154"}});
+db.document.updateMany({"customer.document": "11111111110155", "document.barCode": "000000000000000000000000000000000000000000000155", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900155"}});
+db.document.updateMany({"customer.document": "11111111110156", "document.barCode": "000000000000000000000000000000000000000000000156", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900156"}});
+db.document.updateMany({"customer.document": "11111111110157", "document.barCode": "000000000000000000000000000000000000000000000157", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900157"}});
+db.document.updateMany({"customer.document": "11111111110158", "document.barCode": "000000000000000000000000000000000000000000000158", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900158"}});
+db.document.updateMany({"customer.document": "11111111110159", "document.barCode": "000000000000000000000000000000000000000000000159", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900159"}});
+db.document.updateMany({"customer.document": "11111111110160", "document.barCode": "000000000000000000000000000000000000000000000160", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900160"}});
+db.document.updateMany({"customer.document": "11111111110161", "document.barCode": "000000000000000000000000000000000000000000000161", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900161"}});
+db.document.updateMany({"customer.document": "11111111110162", "document.barCode": "000000000000000000000000000000000000000000000162", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900162"}});
+db.document.updateMany({"customer.document": "11111111110163", "document.barCode": "000000000000000000000000000000000000000000000163", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900163"}});
+db.document.updateMany({"customer.document": "11111111110164", "document.barCode": "000000000000000000000000000000000000000000000164", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900164"}});
+db.document.updateMany({"customer.document": "11111111110165", "document.barCode": "000000000000000000000000000000000000000000000165", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900165"}});
+db.document.updateMany({"customer.document": "11111111110166", "document.barCode": "000000000000000000000000000000000000000000000166", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900166"}});
+db.document.updateMany({"customer.document": "11111111110167", "document.barCode": "000000000000000000000000000000000000000000000167", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900167"}});
+db.document.updateMany({"customer.document": "11111111110168", "document.barCode": "000000000000000000000000000000000000000000000168", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900168"}});
+db.document.updateMany({"customer.document": "11111111110169", "document.barCode": "000000000000000000000000000000000000000000000169", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900169"}});
+db.document.updateMany({"customer.document": "11111111110170", "document.barCode": "000000000000000000000000000000000000000000000170", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900170"}});
+db.document.updateMany({"customer.document": "11111111110171", "document.barCode": "000000000000000000000000000000000000000000000171", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900171"}});
+db.document.updateMany({"customer.document": "11111111110172", "document.barCode": "000000000000000000000000000000000000000000000172", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900172"}});
+db.document.updateMany({"customer.document": "11111111110173", "document.barCode": "000000000000000000000000000000000000000000000173", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900173"}});
+db.document.updateMany({"customer.document": "11111111110174", "document.barCode": "000000000000000000000000000000000000000000000174", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900174"}});
+db.document.updateMany({"customer.document": "11111111110175", "document.barCode": "000000000000000000000000000000000000000000000175", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900175"}});
+db.document.updateMany({"customer.document": "11111111110176", "document.barCode": "000000000000000000000000000000000000000000000176", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900176"}});
+db.document.updateMany({"customer.document": "11111111110177", "document.barCode": "000000000000000000000000000000000000000000000177", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900177"}});
+db.document.updateMany({"customer.document": "11111111110178", "document.barCode": "000000000000000000000000000000000000000000000178", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900178"}});
+db.document.updateMany({"customer.document": "11111111110179", "document.barCode": "000000000000000000000000000000000000000000000179", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900179"}});
+db.document.updateMany({"customer.document": "11111111110180", "document.barCode": "000000000000000000000000000000000000000000000180", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900180"}});

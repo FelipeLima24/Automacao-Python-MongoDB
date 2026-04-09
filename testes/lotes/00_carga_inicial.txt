@@ -1,222 +1,60 @@
-// CLIENTES - Dados de exemplo
-db.clientes.insertMany([
-    {cpf: "123.456.789-01", nome: "Joao Silva", email: "joao.antigo@email.com", status: "inadimplente", inadimplente: true, codigoRegiao: "11", telefoneDesatualizado: true},
-    {cpf: "234.567.890-12", nome: "Maria Santos", email: "maria.antigo@email.com", status: "inadimplente", inadimplente: true, codigoRegiao: "21", telefoneDesatualizado: true},
-    {cpf: "345.678.901-23", nome: "Carlos Oliveira", email: "carlos.antigo@email.com", status: "inadimplente", inadimplente: true, codigoRegiao: "31", telefoneDesatualizado: true},
-    {cpf: "456.789.012-34", nome: "Ana Ferreira", email: "ana.antigo@email.com", status: "inadimplente", inadimplente: true},
-    {cpf: "567.890.123-45", nome: "Pedro Costa", email: "pedro.antigo@email.com", status: "inadimplente", inadimplente: true},
-    {cpf: "111.222.333-44", nome: "Lucas Mendes", endereco: {cep: "00000-000"}, enderecoValidado: false},
-    {cpf: "222.333.444-55", nome: "Julia Alves", endereco: {cep: "00000-000"}, enderecoValidado: false},
-    {cpf: "333.444.555-66", nome: "Rafael Lima", endereco: {cep: "00000-000"}, enderecoValidado: false},
-    {cpf: "444.555.666-77", nome: "Camila Rocha", endereco: {cep: "00000-000"}, enderecoValidado: false},
-    {cpf: "555.666.777-88", nome: "Diego Souza", endereco: {cep: "00000-000"}, enderecoValidado: false},
-    {cpf: "666.777.888-99", nome: "Patricia Dias", aceitouLGPD: null},
-    {cpf: "777.888.999-00", nome: "Rodrigo Campos", aceitouLGPD: null},
-    {cpf: "888.999.000-11", nome: "Beatriz Nunes", aceitouLGPD: null},
-    {cpf: "999.000.111-22", nome: "Gustavo Martins", scoreCredito: 600, pagamentosEmDia: 10},
-    {cpf: "000.111.222-33", nome: "Amanda Ribeiro", scoreCredito: 550, pagamentosEmDia: 8},
-    {cpf: "111.222.333-00", nome: "Thiago Almeida", scoreCredito: 400, pagamentosEmDia: 6},
-    {cpf: "123.123.123-12", nome: "Renata Gomes", limiteCredito: 1000},
-    {cpf: "234.234.234-23", nome: "Marcelo Barbosa", limiteCredito: 2000},
-    {cpf: "345.345.345-34", nome: "Larissa Moreira", limiteCredito: 5000},
-    {cpf: "456.456.456-45", nome: "Felipe Cardoso", limiteCredito: 10000},
-    {cpf: "567.567.567-56", nome: "Natalia Pinto", limiteCredito: 500},
-    {documento: "12.345.678/0001-90", tipoPessoa: "PF", nome: "Empresa ABC"},
-    {documento: "23.456.789/0001-01", tipoPessoa: "PF", nome: "Comercio XYZ"},
-    {documento: "34.567.890/0001-12", tipoPessoa: "PF", nome: "Servicos Rapidos"},
-    {_id: ObjectId("661f8a1b2c3d4e5f6a7b8c90"), nome: "Cliente Email 1", email: "invalido1@"},
-    {_id: ObjectId("661f8a1b2c3d4e5f6a7b8c91"), nome: "Cliente Email 2", email: "invalido2@"},
-    {_id: ObjectId("661f8a1b2c3d4e5f6a7b8c92"), nome: "Cliente Email 3", email: "invalido3@"},
-    {_id: ObjectId("661f8a1b2c3d4e5f6a7b8c93"), nome: "Cliente Email 4", email: "invalido4@"},
-    {_id: ObjectId("661f8a1b2c3d4e5f6a7b8c94"), nome: "Cliente Email 5", email: "invalido5@"},
-    {_id: ObjectId("661f8a1b2c3d4e5f6a7b8c95"), nome: "Cliente Email 6", email: "invalido6@"},
-    {_id: ObjectId("661f8a1b2c3d4e5f6a7b8c96"), nome: "Cliente Email 7", email: "invalido7@"},
-    {_id: ObjectId("661f8a1b2c3d4e5f6a7b8c97"), nome: "Cliente Email 8", email: "invalido8@"},
-    {nome: "Cliente Plano Basico 1", plano: "basico", valorMensalidade: 150, segmento: null},
-    {nome: "Cliente Plano Premium 1", plano: "premium", valorMensalidade: 600, segmento: null},
-    {nome: "Cliente Plano Starter 1", plano: "starter", valorMensalidade: 30, segmento: null},
-    {nome: "Cliente Sync 1", sincronizadoERP: false, status: "ativo"},
-    {nome: "Cliente Sync 2", sincronizadoERP: false, status: "ativo"},
-    {nome: "Cliente Erro Integracao", erroIntegracao: true, tentativasIntegracao: 5},
-    {nome: "Cliente Fidelidade 1", dataContrato: new Date("2023-01-15"), status: "ativo", totalContratos: 4},
-    {nome: "Cliente Fidelidade 2", dataContrato: new Date("2022-06-20"), status: "ativo", valorTotalFaturado: 15000}
-]);
-
-// CONTRATOS - Dados de exemplo
-db.contratos.insertMany([
-    {numeroContrato: "CTR-2026-00001", status: "pendente", clienteNome: "Joao Silva"},
-    {numeroContrato: "CTR-2026-00002", status: "pendente", clienteNome: "Maria Santos"},
-    {numeroContrato: "CTR-2026-00003", status: "pendente", clienteNome: "Carlos Oliveira"},
-    {numeroContrato: "CTR-2026-00004", status: "pendente", clienteNome: "Ana Ferreira"},
-    {numeroContrato: "CTR-2026-00005", status: "pendente", clienteNome: "Pedro Costa"},
-    {numeroContrato: "CTR-2025-00156", status: "ativo", renovacaoAutomatica: true, dataVencimento: new Date("2026-04-15")},
-    {numeroContrato: "CTR-2025-00157", status: "ativo", renovacaoAutomatica: true, dataVencimento: new Date("2026-04-20")},
-    {numeroContrato: "CTR-2025-00158", status: "ativo", renovacaoAutomatica: true, dataVencimento: new Date("2026-04-25")},
-    {numeroContrato: "CTR-2025-00159", status: "ativo", renovacaoAutomatica: true, dataVencimento: new Date("2026-04-28")},
-    {numeroContrato: "CTR-2025-00160", status: "ativo", renovacaoAutomatica: true, dataVencimento: new Date("2026-04-30")},
-    {numeroContrato: "CTR-2024-00789", status: "ativo", clienteNome: "Lucas Mendes"},
-    {numeroContrato: "CTR-2024-00790", status: "ativo", clienteNome: "Julia Alves"},
-    {numeroContrato: "CTR-2024-00791", status: "ativo", clienteNome: "Rafael Lima"},
-    {numeroContrato: "CTR-2024-00792", status: "ativo", clienteNome: "Camila Rocha"},
-    {numeroContrato: "CTR-2024-00793", status: "ativo", clienteNome: "Diego Souza"},
-    {numeroContrato: "CTR-2025-00234", status: "ativo", clienteInadimplente: true, diasAtraso: 35},
-    {numeroContrato: "CTR-2025-00235", status: "ativo", clienteInadimplente: true, diasAtraso: 45},
-    {numeroContrato: "CTR-2025-00236", status: "ativo", clienteInadimplente: true, diasAtraso: 60},
-    {numeroContrato: "CTR-2024-00567", status: "suspenso", clienteNome: "Patricia Dias"},
-    {numeroContrato: "CTR-2024-00568", status: "suspenso", clienteNome: "Rodrigo Campos"},
-    {numeroContrato: "CTR-2024-00569", status: "suspenso", clienteNome: "Beatriz Nunes"},
-    {numeroContrato: "CTR-2025-00100", planoAtual: "basico", valorMensal: 199.90},
-    {numeroContrato: "CTR-2025-00101", planoAtual: "premium", valorMensal: 499.90},
-    {numeroContrato: "CTR-2025-00102", planoAtual: "premium", valorMensal: 499.90},
-    {numeroContrato: "CTR-2025-00103", planoAtual: "basico", valorMensal: 199.90},
-    {numeroContrato: "CTR-2025-00104", planoAtual: "startup", valorMensal: 99.90},
-    {numeroContrato: "CTR-2024-00300", planoAtual: "premium", tempoContrato: 30, valorMensal: 399.90},
-    {numeroContrato: "CTR-2024-00301", planoAtual: "premium", tempoContrato: 25, valorMensal: 399.90},
-    {numeroContrato: "CTR-2024-00302", planoAtual: "premium", tempoContrato: 28, valorMensal: 399.90},
-    {numeroContrato: "CTR-2025-00400", planoAtual: "basico", valorMensal: 399.90, addons: []},
-    {numeroContrato: "CTR-2025-00401", planoAtual: "basico", valorMensal: 399.90, addons: []},
-    {numeroContrato: "CTR-2025-00402", planoAtual: "basico", valorMensal: 299.90, addons: []},
-    {numeroContrato: "CTR-2025-00403", planoAtual: "basico", valorMensal: 399.90, addons: []},
-    {numeroContrato: "CTR-2023-00050", dataInicio: null, dataFim: null, status: "ativo"},
-    {numeroContrato: "CTR-2023-00051", dataInicio: null, dataFim: null, status: "ativo"},
-    {numeroContrato: "CTR-2025-00500", slaUptime: 95.0, slaTempoReparo: 48},
-    {numeroContrato: "CTR-2025-00501", slaUptime: 95.0, slaTempoReparo: 48},
-    {numeroContrato: "CTR-2025-00502", slaUptime: 95.0, slaTempoReparo: 48},
-    {numeroContrato: "CTR-2025-00503", slaUptime: 95.0, slaTempoReparo: 48},
-    {tipoProduto: "internet", unidadeNegocio: null},
-    {tipoProduto: "telefonia", unidadeNegocio: null},
-    {tipoProduto: "tv", unidadeNegocio: null},
-    {tipoProduto: "combo", unidadeNegocio: null},
-    {integradoCRM: false, integradoBilling: false, processado: false, status: "ativo"}
-]);
-
-// FATURAS - Dados de exemplo
-db.faturas.insertMany([
-    {numeroFatura: "FAT-2026-03-00001", status: "pendente", valor: 299.90},
-    {numeroFatura: "FAT-2026-03-00002", status: "pendente", valor: 199.90},
-    {numeroFatura: "FAT-2026-03-00003", status: "pendente", valor: 399.90},
-    {numeroFatura: "FAT-2026-03-00004", status: "pendente", valor: 149.90},
-    {numeroFatura: "FAT-2026-03-00005", status: "pendente", valor: 599.90},
-    {numeroFatura: "FAT-2026-03-00006", status: "pendente", valor: 249.90},
-    {numeroFatura: "FAT-2026-03-00007", status: "pendente", valor: 179.90},
-    {numeroFatura: "FAT-2026-03-00008", status: "pendente", valor: 329.90},
-    {numeroFatura: "FAT-2026-02-00101", status: "emitido", valor: 299.90},
-    {numeroFatura: "FAT-2026-02-00102", status: "emitido", valor: 199.90},
-    {numeroFatura: "FAT-2026-02-00103", status: "emitido", valor: 399.90},
-    {numeroFatura: "FAT-2026-02-00104", status: "emitido", valor: 149.90},
-    {numeroFatura: "FAT-2026-02-00105", status: "emitido", valor: 599.90},
-    {numeroFatura: "FAT-2026-02-00106", status: "emitido", valor: 89.90},
-    {numeroFatura: "FAT-2026-02-00107", status: "emitido", valor: 449.90},
-    {numeroFatura: "FAT-2026-02-00108", status: "emitido", valor: 279.90},
-    {numeroFatura: "FAT-2026-02-00109", status: "emitido", valor: 199.90},
-    {numeroFatura: "FAT-2026-02-00110", status: "emitido", valor: 349.90},
-    {numeroFatura: "FAT-2026-04-00201", dataVencimento: new Date("2026-04-10"), status: "emitido"},
-    {numeroFatura: "FAT-2026-04-00202", dataVencimento: new Date("2026-04-05"), status: "emitido"},
-    {numeroFatura: "FAT-2026-04-00203", dataVencimento: new Date("2026-04-01"), status: "emitido"},
-    {numeroFatura: "FAT-2026-01-00301", status: "vencido", valorOriginal: 199.90, diasAtraso: 67},
-    {numeroFatura: "FAT-2026-01-00302", status: "vencido", valorOriginal: 299.90, diasAtraso: 52},
-    {numeroFatura: "FAT-2026-01-00303", status: "vencido", valorOriginal: 399.90, diasAtraso: 45},
-    {numeroFatura: "FAT-2026-01-00304", status: "vencido", valorOriginal: 149.90, diasAtraso: 38},
-    {numeroFatura: "FAT-2026-01-00305", status: "vencido", valorOriginal: 599.90, diasAtraso: 31},
-    {numeroFatura: "FAT-2026-03-00401", status: "emitido", valor: 299.90},
-    {numeroFatura: "FAT-2026-03-00402", status: "emitido", valor: 299.90},
-    {numeroFatura: "FAT-2026-03-00403", status: "emitido", valor: 199.90},
-    {numeroFatura: "FAT-2026-03-00404", status: "emitido", valor: 399.90},
-    {numeroFatura: "FAT-2026-03-00405", status: "emitido", valor: 399.90},
-    {numeroFatura: "FAT-2026-03-00406", status: "emitido", valor: 149.90},
-    {numeroFatura: "FAT-2026-03-00501", status: "vencido", segundaViaGerada: false},
-    {numeroFatura: "FAT-2026-03-00502", status: "vencido", segundaViaGerada: false},
-    {numeroFatura: "FAT-2026-03-00503", status: "vencido", segundaViaGerada: false},
-    {numeroFatura: "FAT-2026-03-00601", status: "processado", notaFiscalEmitida: false},
-    {numeroFatura: "FAT-2026-03-00602", status: "processado", notaFiscalEmitida: false},
-    {numeroFatura: "FAT-2026-03-00603", status: "processado", notaFiscalEmitida: false},
-    {numeroFatura: "FAT-2026-03-00604", status: "processado", notaFiscalEmitida: false},
-    {numeroFatura: "FAT-2025-12-00701", status: "vencido", valorTotal: 399.90, parcelado: false},
-    {numeroFatura: "FAT-2025-12-00702", status: "vencido", valorTotal: 499.90, parcelado: false},
-    {numeroFatura: "FAT-2025-12-00703", status: "vencido", valorTotal: 699.90, parcelado: false},
-    {numeroFatura: "FAT-2026-01-00704", status: "vencido", valorTotal: 499.90, parcelado: false},
-    {numeroFatura: "FAT-2026-04-00801", status: "emitido", valor: 299.90},
-    {numeroFatura: "FAT-2026-04-00802", status: "emitido", valor: 399.90},
-    {numeroFatura: "FAT-2026-04-00803", status: "emitido", valor: 299.90},
-    {numeroFatura: "FAT-2026-04-00804", status: "emitido", valor: 499.90},
-    {numeroFatura: "FAT-2026-03-00901", valorTotal: null, itens: [{desc: "Plano", valor: 199.90}]},
-    {numeroFatura: "FAT-2026-03-00902", valorTotal: 2999.00, itens: [{desc: "Plano", valor: 299.90}]},
-    {numeroFatura: "FAT-2026-03-00903", valorTotal: 14.99, itens: [{desc: "Plano", valor: 149.90}]},
-    {numeroFatura: "FAT-2025-10-01001", status: "vencido", diasAtraso: 120},
-    {numeroFatura: "FAT-2025-10-01002", status: "vencido", diasAtraso: 110},
-    {numeroFatura: "FAT-2025-11-01003", status: "vencido", diasAtraso: 95},
-    {status: "processado", sincronizadoERP: false},
-    {status: "processado", enviouEmail: false},
-    {dataVencimento: new Date("2026-04-08"), enviouSMS: false},
-    {status: "emitido", processado: false}
-]);
-
-// PAGAMENTOS - Dados de exemplo
-db.pagamentos.insertMany([
-    {transacaoId: "PIX-2026-04-07-000001", status: "pendente", valor: 299.90, tipo: "pix"},
-    {transacaoId: "PIX-2026-04-07-000002", status: "pendente", valor: 199.90, tipo: "pix"},
-    {transacaoId: "PIX-2026-04-07-000003", status: "pendente", valor: 399.90, tipo: "pix"},
-    {transacaoId: "PIX-2026-04-07-000004", status: "pendente", valor: 149.90, tipo: "pix"},
-    {transacaoId: "PIX-2026-04-07-000005", status: "pendente", valor: 599.90, tipo: "pix"},
-    {transacaoId: "PIX-2026-04-07-000006", status: "pendente", valor: 249.90, tipo: "pix"},
-    {transacaoId: "PIX-2026-04-07-000007", status: "pendente", valor: 179.90, tipo: "pix"},
-    {transacaoId: "PIX-2026-04-07-000008", status: "pendente", valor: 329.90, tipo: "pix"},
-    {codigoBarras: "23793.38128 60000.000003 00000.000401 1 84260000029990", status: "pendente", tipo: "boleto"},
-    {codigoBarras: "23793.38128 60000.000003 00000.000402 2 84260000019990", status: "pendente", tipo: "boleto"},
-    {codigoBarras: "23793.38128 60000.000003 00000.000403 3 84260000039990", status: "pendente", tipo: "boleto"},
-    {codigoBarras: "23793.38128 60000.000003 00000.000404 4 84260000014990", status: "pendente", tipo: "boleto"},
-    {codigoBarras: "23793.38128 60000.000003 00000.000405 5 84260000059990", status: "pendente", tipo: "boleto"},
-    {codigoBarras: "23793.38128 60000.000003 00000.000406 6 84260000008990", status: "pendente", tipo: "boleto"},
-    {codigoBarras: "23793.38128 60000.000003 00000.000407 7 84260000044990", status: "pendente", tipo: "boleto"},
-    {nsu: "NSU-2026-04-001234", status: "pendente", tipo: "cartao", valor: 299.90},
-    {nsu: "NSU-2026-04-001235", status: "pendente", tipo: "cartao", valor: 399.90},
-    {nsu: "NSU-2026-04-001236", status: "pendente", tipo: "cartao", valor: 599.90},
-    {nsu: "NSU-2026-04-001237", status: "pendente", tipo: "cartao", valor: 799.90},
-    {nsu: "NSU-2026-04-001238", status: "pendente", tipo: "cartao", valor: 199.90},
-    {nsu: "NSU-2026-04-001239", status: "pendente", tipo: "cartao", valor: 249.90},
-    {transacaoId: "DUP-2026-04-000101", status: "pago", valor: 299.90},
-    {transacaoId: "DUP-2026-04-000102", status: "pago", valor: 199.90},
-    {transacaoId: "DUP-2026-04-000103", status: "pago", valor: 399.90},
-    {tipoCobranca: "debito_automatico", competencia: "2026-04", status: "pendente"},
-    {mandatoId: "MND-2026-00001", tipoCobranca: "debito_automatico", status: "pendente", valor: 299.90},
-    {mandatoId: "MND-2026-00002", tipoCobranca: "debito_automatico", status: "pendente", valor: 199.90},
-    {mandatoId: "MND-2026-00003", tipoCobranca: "debito_automatico", status: "pendente", valor: 399.90},
-    {mandatoId: "MND-2026-00004", tipoCobranca: "debito_automatico", status: "pendente", valor: 599.90},
-    {mandatoId: "MND-2026-00005", tipoCobranca: "debito_automatico", status: "pendente", valor: 599.90},
-    {faturaRef: "FAT-2026-03-00501", status: "parcial", valorFatura: 299.90},
-    {faturaRef: "FAT-2026-03-00502", status: "parcial", valorFatura: 399.90},
-    {faturaRef: "FAT-2026-03-00503", status: "parcial", valorFatura: 399.90},
-    {faturaRef: "FAT-2026-03-00504", status: "parcial", valorFatura: 599.90},
-    {chargebackId: "CHB-2026-04-00001", statusChargeback: "aberto", valor: 299.90},
-    {chargebackId: "CHB-2026-04-00002", statusChargeback: "aberto", valor: 199.90},
-    {chargebackId: "CHB-2026-04-00003", statusChargeback: "aberto", valor: 399.90},
-    {chargebackId: "CHB-2026-04-00004", statusChargeback: "aberto", valor: 599.90},
-    {processadora: "CIELO", competencia: "2026-04", status: "confirmado"},
-    {processadora: "REDE", competencia: "2026-04", status: "confirmado"},
-    {processadora: "STONE", competencia: "2026-04", status: "confirmado"},
-    {transacaoId: "TXN-2026-04-10001", valor: 299.90, taxaCalculada: false},
-    {transacaoId: "TXN-2026-04-10002", valor: 199.90, taxaCalculada: false},
-    {transacaoId: "TXN-2026-04-10003", valor: 399.90, taxaCalculada: false},
-    {transacaoId: "CONC-2026-04-00001", status: "confirmado", conciliado: false, valor: 299.90},
-    {transacaoId: "CONC-2026-04-00002", status: "confirmado", conciliado: false, valor: 199.90},
-    {transacaoId: "CONC-2026-04-00003", status: "confirmado", conciliado: false, valor: 399.90},
-    {transacaoId: "CONC-2026-04-00004", status: "confirmado", conciliado: false, valor: 149.90},
-    {tentativaId: "TENT-2026-04-00001", status: "processando", valor: 299.90},
-    {tentativaId: "TENT-2026-04-00002", status: "processando", valor: 199.90},
-    {tentativaId: "TENT-2026-04-00003", status: "processando", valor: 399.90},
-    {tentativaId: "TENT-2026-04-00004", status: "processando", valor: 149.90},
-    {tentativaId: "TENT-2026-04-00005", status: "processando", valor: 599.90},
-    {status: "confirmado", sincronizadoGateway: false},
-    {status: "confirmado", notificadoWebhook: false},
-    {status: "pendente", processado: false},
-    {clienteId: "CLI001", meioPagamentoPadrao: null},
-    {clienteCpf: "123.456.789-01", meioPagamentoPadrao: null},
-    {clienteCpf: "234.567.890-12", meioPagamentoPadrao: null},
-    {clienteCpf: "345.678.901-23", meioPagamentoPadrao: null}
-]);
-
-print("CARGA INICIAL CONCLUIDA!");
-print("Clientes: " + db.clientes.countDocuments());
-print("Contratos: " + db.contratos.countDocuments());
-print("Faturas: " + db.faturas.countDocuments());
-print("Pagamentos: " + db.pagamentos.countDocuments());
+db.document.updateMany({"customer.document": "11111111110061", "document.barCode": "000000000000000000000000000000000000000000000061", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900061"}});
+db.document.updateMany({"customer.document": "11111111110062", "document.barCode": "000000000000000000000000000000000000000000000062", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900062"}});
+db.document.updateMany({"customer.document": "11111111110063", "document.barCode": "000000000000000000000000000000000000000000000063", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900063"}});
+db.document.updateMany({"customer.document": "11111111110064", "document.barCode": "000000000000000000000000000000000000000000000064", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900064"}});
+db.document.updateMany({"customer.document": "11111111110065", "document.barCode": "000000000000000000000000000000000000000000000065", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900065"}});
+db.document.updateMany({"customer.document": "11111111110066", "document.barCode": "000000000000000000000000000000000000000000000066", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900066"}});
+db.document.updateMany({"customer.document": "11111111110067", "document.barCode": "000000000000000000000000000000000000000000000067", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900067"}});
+db.document.updateMany({"customer.document": "11111111110068", "document.barCode": "000000000000000000000000000000000000000000000068", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900068"}});
+db.document.updateMany({"customer.document": "11111111110069", "document.barCode": "000000000000000000000000000000000000000000000069", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900069"}});
+db.document.updateMany({"customer.document": "11111111110070", "document.barCode": "000000000000000000000000000000000000000000000070", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900070"}});
+db.document.updateMany({"customer.document": "11111111110071", "document.barCode": "000000000000000000000000000000000000000000000071", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900071"}});
+db.document.updateMany({"customer.document": "11111111110072", "document.barCode": "000000000000000000000000000000000000000000000072", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900072"}});
+db.document.updateMany({"customer.document": "11111111110073", "document.barCode": "000000000000000000000000000000000000000000000073", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900073"}});
+db.document.updateMany({"customer.document": "11111111110074", "document.barCode": "000000000000000000000000000000000000000000000074", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900074"}});
+db.document.updateMany({"customer.document": "11111111110075", "document.barCode": "000000000000000000000000000000000000000000000075", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900075"}});
+db.document.updateMany({"customer.document": "11111111110076", "document.barCode": "000000000000000000000000000000000000000000000076", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900076"}});
+db.document.updateMany({"customer.document": "11111111110077", "document.barCode": "000000000000000000000000000000000000000000000077", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900077"}});
+db.document.updateMany({"customer.document": "11111111110078", "document.barCode": "000000000000000000000000000000000000000000000078", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900078"}});
+db.document.updateMany({"customer.document": "11111111110079", "document.barCode": "000000000000000000000000000000000000000000000079", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900079"}});
+db.document.updateMany({"customer.document": "11111111110080", "document.barCode": "000000000000000000000000000000000000000000000080", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900080"}});
+db.document.updateMany({"customer.document": "11111111110081", "document.barCode": "000000000000000000000000000000000000000000000081", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900081"}});
+db.document.updateMany({"customer.document": "11111111110082", "document.barCode": "000000000000000000000000000000000000000000000082", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900082"}});
+db.document.updateMany({"customer.document": "11111111110083", "document.barCode": "000000000000000000000000000000000000000000000083", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900083"}});
+db.document.updateMany({"customer.document": "11111111110084", "document.barCode": "000000000000000000000000000000000000000000000084", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900084"}});
+db.document.updateMany({"customer.document": "11111111110085", "document.barCode": "000000000000000000000000000000000000000000000085", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900085"}});
+db.document.updateMany({"customer.document": "11111111110086", "document.barCode": "000000000000000000000000000000000000000000000086", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900086"}});
+db.document.updateMany({"customer.document": "11111111110087", "document.barCode": "000000000000000000000000000000000000000000000087", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900087"}});
+db.document.updateMany({"customer.document": "11111111110088", "document.barCode": "000000000000000000000000000000000000000000000088", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900088"}});
+db.document.updateMany({"customer.document": "11111111110089", "document.barCode": "000000000000000000000000000000000000000000000089", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900089"}});
+db.document.updateMany({"customer.document": "11111111110090", "document.barCode": "000000000000000000000000000000000000000000000090", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900090"}});
+db.document.updateMany({"customer.document": "11111111110091", "document.barCode": "000000000000000000000000000000000000000000000091", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900091"}});
+db.document.updateMany({"customer.document": "11111111110092", "document.barCode": "000000000000000000000000000000000000000000000092", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900092"}});
+db.document.updateMany({"customer.document": "11111111110093", "document.barCode": "000000000000000000000000000000000000000000000093", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900093"}});
+db.document.updateMany({"customer.document": "11111111110094", "document.barCode": "000000000000000000000000000000000000000000000094", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900094"}});
+db.document.updateMany({"customer.document": "11111111110095", "document.barCode": "000000000000000000000000000000000000000000000095", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900095"}});
+db.document.updateMany({"customer.document": "11111111110096", "document.barCode": "000000000000000000000000000000000000000000000096", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900096"}});
+db.document.updateMany({"customer.document": "11111111110097", "document.barCode": "000000000000000000000000000000000000000000000097", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900097"}});
+db.document.updateMany({"customer.document": "11111111110098", "document.barCode": "000000000000000000000000000000000000000000000098", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900098"}});
+db.document.updateMany({"customer.document": "11111111110099", "document.barCode": "000000000000000000000000000000000000000000000099", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900099"}});
+db.document.updateMany({"customer.document": "11111111110100", "document.barCode": "000000000000000000000000000000000000000000000100", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900100"}});
+db.document.updateMany({"customer.document": "11111111110101", "document.barCode": "000000000000000000000000000000000000000000000101", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900101"}});
+db.document.updateMany({"customer.document": "11111111110102", "document.barCode": "000000000000000000000000000000000000000000000102", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900102"}});
+db.document.updateMany({"customer.document": "11111111110103", "document.barCode": "000000000000000000000000000000000000000000000103", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900103"}});
+db.document.updateMany({"customer.document": "11111111110104", "document.barCode": "000000000000000000000000000000000000000000000104", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900104"}});
+db.document.updateMany({"customer.document": "11111111110105", "document.barCode": "000000000000000000000000000000000000000000000105", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900105"}});
+db.document.updateMany({"customer.document": "11111111110106", "document.barCode": "000000000000000000000000000000000000000000000106", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900106"}});
+db.document.updateMany({"customer.document": "11111111110107", "document.barCode": "000000000000000000000000000000000000000000000107", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900107"}});
+db.document.updateMany({"customer.document": "11111111110108", "document.barCode": "000000000000000000000000000000000000000000000108", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900108"}});
+db.document.updateMany({"customer.document": "11111111110109", "document.barCode": "000000000000000000000000000000000000000000000109", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900109"}});
+db.document.updateMany({"customer.document": "11111111110110", "document.barCode": "000000000000000000000000000000000000000000000110", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900110"}});
+db.document.updateMany({"customer.document": "11111111110111", "document.barCode": "000000000000000000000000000000000000000000000111", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900111"}});
+db.document.updateMany({"customer.document": "11111111110112", "document.barCode": "000000000000000000000000000000000000000000000112", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900112"}});
+db.document.updateMany({"customer.document": "11111111110113", "document.barCode": "000000000000000000000000000000000000000000000113", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900113"}});
+db.document.updateMany({"customer.document": "11111111110114", "document.barCode": "000000000000000000000000000000000000000000000114", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900114"}});
+db.document.updateMany({"customer.document": "11111111110115", "document.barCode": "000000000000000000000000000000000000000000000115", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900115"}});
+db.document.updateMany({"customer.document": "11111111110116", "document.barCode": "000000000000000000000000000000000000000000000116", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900116"}});
+db.document.updateMany({"customer.document": "11111111110117", "document.barCode": "000000000000000000000000000000000000000000000117", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900117"}});
+db.document.updateMany({"customer.document": "11111111110118", "document.barCode": "000000000000000000000000000000000000000000000118", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900118"}});
+db.document.updateMany({"customer.document": "11111111110119", "document.barCode": "000000000000000000000000000000000000000000000119", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900119"}});
+db.document.updateMany({"customer.document": "11111111110120", "document.barCode": "000000000000000000000000000000000000000000000120", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900120"}});

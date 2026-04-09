@@ -134,6 +134,8 @@ Arquivo `.txt`:
 
 - comandos MongoDB em texto simples
 - um comando por linha
+- neste projeto, o lote padrao foi fixado no formato `db.document.updateMany(..., {$set: ...});`
+- a unica variacao permitida fica nos valores de `customer.document`, `document.barCode` e `customer.accountNumber`
 
 Arquivo `.zip`:
 
@@ -143,8 +145,7 @@ Arquivo `.zip`:
 Exemplo de comando:
 
 ```javascript
-db.clientes.updateMany({"statusCadastro": "pendente"}, {"$set": {"statusCadastro": "ativo"}})
-db.faturas.updateOne({"numero": "FAT-2026-0315"}, {"$set": {"status": "cancelada"}}, {"upsert": false})
+db.document.updateMany({"customer.document": "11111111111111", "document.barCode": "000000000000000000000000000000000000000000000000", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999999999"}});
 ```
 
 ## Limitacoes do MVP

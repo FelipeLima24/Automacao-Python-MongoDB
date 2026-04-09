@@ -1,86 +1,60 @@
-// BLOCO 1: Confirmacao de pagamentos via PIX (retorno bancario)
-db.pagamentos.updateOne({transacaoId: "PIX-2026-04-07-000001"}, {$set: {status: "confirmado", dataConfirmacao: new Date("2026-04-07T08:15:32Z"), bancoOrigem: "260", nomeOrigem: "NUBANK", valorConfirmado: 299.90}})
-db.pagamentos.updateOne({transacaoId: "PIX-2026-04-07-000002"}, {$set: {status: "confirmado", dataConfirmacao: new Date("2026-04-07T08:22:45Z"), bancoOrigem: "077", nomeOrigem: "INTER", valorConfirmado: 199.90}})
-db.pagamentos.updateOne({transacaoId: "PIX-2026-04-07-000003"}, {$set: {status: "confirmado", dataConfirmacao: new Date("2026-04-07T08:30:18Z"), bancoOrigem: "341", nomeOrigem: "ITAU", valorConfirmado: 399.90}})
-db.pagamentos.updateOne({transacaoId: "PIX-2026-04-07-000004"}, {$set: {status: "confirmado", dataConfirmacao: new Date("2026-04-07T08:45:02Z"), bancoOrigem: "033", nomeOrigem: "SANTANDER", valorConfirmado: 149.90}})
-db.pagamentos.updateOne({transacaoId: "PIX-2026-04-07-000005"}, {$set: {status: "confirmado", dataConfirmacao: new Date("2026-04-07T09:01:55Z"), bancoOrigem: "237", nomeOrigem: "BRADESCO", valorConfirmado: 599.90}})
-db.pagamentos.updateOne({transacaoId: "PIX-2026-04-07-000006"}, {$set: {status: "confirmado", dataConfirmacao: new Date("2026-04-07T09:15:33Z"), bancoOrigem: "001", nomeOrigem: "BB", valorConfirmado: 249.90}})
-db.pagamentos.updateOne({transacaoId: "PIX-2026-04-07-000007"}, {$set: {status: "confirmado", dataConfirmacao: new Date("2026-04-07T09:28:41Z"), bancoOrigem: "104", nomeOrigem: "CAIXA", valorConfirmado: 179.90}})
-db.pagamentos.updateOne({transacaoId: "PIX-2026-04-07-000008"}, {$set: {status: "confirmado", dataConfirmacao: new Date("2026-04-07T09:42:19Z"), bancoOrigem: "756", nomeOrigem: "SICOOB", valorConfirmado: 329.90}})
-
-// BLOCO 2: Processamento de boletos pagos (arquivo CNAB)
-db.pagamentos.updateOne({codigoBarras: "23793.38128 60000.000003 00000.000401 1 84260000029990"}, {$set: {status: "liquidado", dataLiquidacao: new Date("2026-04-06"), canalPagamento: "internet_banking"}})
-db.pagamentos.updateOne({codigoBarras: "23793.38128 60000.000003 00000.000402 2 84260000019990"}, {$set: {status: "liquidado", dataLiquidacao: new Date("2026-04-06"), canalPagamento: "app_banco"}})
-db.pagamentos.updateOne({codigoBarras: "23793.38128 60000.000003 00000.000403 3 84260000039990"}, {$set: {status: "liquidado", dataLiquidacao: new Date("2026-04-06"), canalPagamento: "caixa_eletronico"}})
-db.pagamentos.updateOne({codigoBarras: "23793.38128 60000.000003 00000.000404 4 84260000014990"}, {$set: {status: "liquidado", dataLiquidacao: new Date("2026-04-06"), canalPagamento: "loteria"}})
-db.pagamentos.updateOne({codigoBarras: "23793.38128 60000.000003 00000.000405 5 84260000059990"}, {$set: {status: "liquidado", dataLiquidacao: new Date("2026-04-07"), canalPagamento: "internet_banking"}})
-db.pagamentos.updateOne({codigoBarras: "23793.38128 60000.000003 00000.000406 6 84260000008990"}, {$set: {status: "liquidado", dataLiquidacao: new Date("2026-04-07"), canalPagamento: "app_banco"}})
-db.pagamentos.updateOne({codigoBarras: "23793.38128 60000.000003 00000.000407 7 84260000044990"}, {$set: {status: "liquidado", dataLiquidacao: new Date("2026-04-07"), canalPagamento: "correspondente_bancario"}})
-
-// BLOCO 3: Baixa de pagamentos via cartao de credito
-db.pagamentos.updateOne({nsu: "NSU-2026-04-001234"}, {$set: {status: "aprovado", dataAutorizacao: new Date("2026-04-07T10:15:00Z"), bandeira: "visa", autorizacao: "AUTH-789456", parcelas: 1}})
-db.pagamentos.updateOne({nsu: "NSU-2026-04-001235"}, {$set: {status: "aprovado", dataAutorizacao: new Date("2026-04-07T10:18:32Z"), bandeira: "mastercard", autorizacao: "AUTH-789457", parcelas: 3}})
-db.pagamentos.updateOne({nsu: "NSU-2026-04-001236"}, {$set: {status: "aprovado", dataAutorizacao: new Date("2026-04-07T10:22:45Z"), bandeira: "elo", autorizacao: "AUTH-789458", parcelas: 6}})
-db.pagamentos.updateOne({nsu: "NSU-2026-04-001237"}, {$set: {status: "aprovado", dataAutorizacao: new Date("2026-04-07T10:28:11Z"), bandeira: "visa", autorizacao: "AUTH-789459", parcelas: 12}})
-db.pagamentos.updateOne({nsu: "NSU-2026-04-001238"}, {$set: {status: "aprovado", dataAutorizacao: new Date("2026-04-07T10:35:29Z"), bandeira: "amex", autorizacao: "AUTH-789460", parcelas: 1}})
-db.pagamentos.updateOne({nsu: "NSU-2026-04-001239"}, {$set: {status: "aprovado", dataAutorizacao: new Date("2026-04-07T10:42:55Z"), bandeira: "hipercard", autorizacao: "AUTH-789461", parcelas: 2}})
-
-// BLOCO 4: Estorno de pagamentos duplicados
-db.pagamentos.updateOne({transacaoId: "DUP-2026-04-000101"}, {$set: {status: "estornado", dataEstorno: new Date("2026-04-07"), motivoEstorno: "duplicidade", valorEstorno: 299.90, protocoloEstorno: "EST-2026-04-001"}})
-db.pagamentos.updateOne({transacaoId: "DUP-2026-04-000102"}, {$set: {status: "estornado", dataEstorno: new Date("2026-04-07"), motivoEstorno: "duplicidade", valorEstorno: 199.90, protocoloEstorno: "EST-2026-04-002"}})
-db.pagamentos.updateOne({transacaoId: "DUP-2026-04-000103"}, {$set: {status: "estornado", dataEstorno: new Date("2026-04-07"), motivoEstorno: "cobranca_indevida", valorEstorno: 399.90, protocoloEstorno: "EST-2026-04-003"}})
-
-// BLOCO 5: Processamento de debito automatico
-db.pagamentos.updateMany({tipoCobranca: "debito_automatico", competencia: "2026-04"}, {$set: {status: "agendado", dataAgendamento: new Date("2026-04-10"), bancoDebito: "mandato_ativo"}})
-db.pagamentos.updateOne({mandatoId: "MND-2026-00001"}, {$set: {status: "executado", dataDebito: new Date("2026-04-07"), valorDebitado: 299.90, sucesso: true}})
-db.pagamentos.updateOne({mandatoId: "MND-2026-00002"}, {$set: {status: "executado", dataDebito: new Date("2026-04-07"), valorDebitado: 199.90, sucesso: true}})
-db.pagamentos.updateOne({mandatoId: "MND-2026-00003"}, {$set: {status: "falha", dataDebito: new Date("2026-04-07"), motivoFalha: "saldo_insuficiente", tentativa: 1}})
-db.pagamentos.updateOne({mandatoId: "MND-2026-00004"}, {$set: {status: "falha", dataDebito: new Date("2026-04-07"), motivoFalha: "conta_encerrada", tentativa: 1}})
-db.pagamentos.updateOne({mandatoId: "MND-2026-00005"}, {$set: {status: "executado", dataDebito: new Date("2026-04-07"), valorDebitado: 599.90, sucesso: true}})
-
-// BLOCO 6: Conciliacao de pagamentos parciais
-db.pagamentos.updateOne({faturaRef: "FAT-2026-03-00501"}, {$set: {pagamentoParcial: true, valorPago: 150.00, valorRestante: 149.90, statusConciliacao: "parcial"}})
-db.pagamentos.updateOne({faturaRef: "FAT-2026-03-00502"}, {$set: {pagamentoParcial: true, valorPago: 200.00, valorRestante: 199.90, statusConciliacao: "parcial"}})
-db.pagamentos.updateOne({faturaRef: "FAT-2026-03-00503"}, {$set: {pagamentoParcial: true, valorPago: 300.00, valorRestante: 99.90, statusConciliacao: "parcial"}})
-db.pagamentos.updateOne({faturaRef: "FAT-2026-03-00504"}, {$set: {pagamentoParcial: true, valorPago: 100.00, valorRestante: 499.90, statusConciliacao: "parcial"}})
-
-// BLOCO 7: Reversao de chargebacks
-db.pagamentos.updateOne({chargebackId: "CHB-2026-04-00001"}, {$set: {statusChargeback: "revertido", dataReversao: new Date("2026-04-07"), motivoReversao: "documentacao_comprovada", valorRecuperado: 299.90}})
-db.pagamentos.updateOne({chargebackId: "CHB-2026-04-00002"}, {$set: {statusChargeback: "revertido", dataReversao: new Date("2026-04-07"), motivoReversao: "cliente_reconheceu", valorRecuperado: 199.90}})
-db.pagamentos.updateOne({chargebackId: "CHB-2026-04-00003"}, {$set: {statusChargeback: "perdido", dataFinalizacao: new Date("2026-04-07"), motivoPerda: "prazo_expirado", valorPerdido: 399.90}})
-db.pagamentos.updateOne({chargebackId: "CHB-2026-04-00004"}, {$set: {statusChargeback: "em_analise", dataAtualizacao: new Date("2026-04-07"), documentosEnviados: true, prazoResposta: new Date("2026-04-15")}})
-
-// BLOCO 8: Atualizacao de taxas e tarifas de processamento
-db.pagamentos.updateMany({processadora: "CIELO", competencia: "2026-04"}, {$set: {taxaProcessamento: 2.5, valorTaxa: null, taxaCalculada: false}})
-db.pagamentos.updateMany({processadora: "REDE", competencia: "2026-04"}, {$set: {taxaProcessamento: 2.3, valorTaxa: null, taxaCalculada: false}})
-db.pagamentos.updateMany({processadora: "STONE", competencia: "2026-04"}, {$set: {taxaProcessamento: 1.9, valorTaxa: null, taxaCalculada: false}})
-db.pagamentos.updateOne({transacaoId: "TXN-2026-04-10001"}, {$set: {taxaCalculada: true, valorTaxa: 7.49, valorLiquido: 292.41}})
-db.pagamentos.updateOne({transacaoId: "TXN-2026-04-10002"}, {$set: {taxaCalculada: true, valorTaxa: 4.59, valorLiquido: 195.31}})
-db.pagamentos.updateOne({transacaoId: "TXN-2026-04-10003"}, {$set: {taxaCalculada: true, valorTaxa: 7.59, valorLiquido: 392.31}})
-
-// BLOCO 9: Vinculacao de pagamentos a faturas (conciliacao)
-db.pagamentos.updateMany({conciliado: false, status: "confirmado"}, {$set: {conciliado: true, dataConciliacao: new Date("2026-04-07"), tipoConciliacao: "automatica"}})
-db.pagamentos.updateOne({transacaoId: "CONC-2026-04-00001"}, {$set: {faturaVinculada: "FAT-2026-03-00101", conciliado: true, diferenca: 0}})
-db.pagamentos.updateOne({transacaoId: "CONC-2026-04-00002"}, {$set: {faturaVinculada: "FAT-2026-03-00102", conciliado: true, diferenca: 0}})
-db.pagamentos.updateOne({transacaoId: "CONC-2026-04-00003"}, {$set: {faturaVinculada: "FAT-2026-03-00103", conciliado: true, diferenca: -0.10, ajusteNecessario: true}})
-db.pagamentos.updateOne({transacaoId: "CONC-2026-04-00004"}, {$set: {faturaVinculada: "FAT-2026-03-00104", conciliado: true, diferenca: 0.05, ajusteNecessario: true}})
-
-// BLOCO 10: Registro de tentativas de pagamento falhas
-db.pagamentos.updateOne({tentativaId: "TENT-2026-04-00001"}, {$set: {status: "falha", codigoErro: "51", descricaoErro: "Saldo insuficiente", dataFalha: new Date("2026-04-07")}})
-db.pagamentos.updateOne({tentativaId: "TENT-2026-04-00002"}, {$set: {status: "falha", codigoErro: "14", descricaoErro: "Cartao invalido", dataFalha: new Date("2026-04-07")}})
-db.pagamentos.updateOne({tentativaId: "TENT-2026-04-00003"}, {$set: {status: "falha", codigoErro: "57", descricaoErro: "Transacao nao permitida", dataFalha: new Date("2026-04-07")}})
-db.pagamentos.updateOne({tentativaId: "TENT-2026-04-00004"}, {$set: {status: "falha", codigoErro: "78", descricaoErro: "Cartao bloqueado", dataFalha: new Date("2026-04-07")}})
-db.pagamentos.updateOne({tentativaId: "TENT-2026-04-00005"}, {$set: {status: "falha", codigoErro: "05", descricaoErro: "Nao autorizada", dataFalha: new Date("2026-04-07")}})
-
-// BLOCO 11: Flags de integracao com gateway de pagamento
-db.pagamentos.updateMany({sincronizadoGateway: false, status: {$in: ["confirmado", "aprovado"]}}, {$set: {sincronizadoGateway: true, dataSincronizacaoGw: new Date("2026-04-07")}})
-db.pagamentos.updateMany({notificadoWebhook: false, status: "confirmado"}, {$set: {notificadoWebhook: true, dataNotificacao: new Date("2026-04-07"), tentativasWebhook: 1}})
-db.pagamentos.updateMany({processado: false}, {$set: {processado: true, dataProcessamento: new Date("2026-04-07"), loteProcessamento: "PAG-BATCH-2026-04-07-001"}})
-
-// BLOCO 12: Atualizacao de metodos de pagamento preferidos
-db.pagamentos.updateMany({clienteId: {$exists: true}, meioPagamentoPadrao: null}, {$set: {meioPagamentoPadrao: "pix", dataAtualizacaoPref: new Date("2026-04-07")}})
-db.pagamentos.updateOne({clienteCpf: "123.456.789-01"}, {$set: {meioPagamentoPadrao: "cartao_credito", ultimoBandeira: "visa", ultimos4digitos: "1234"}})
-db.pagamentos.updateOne({clienteCpf: "234.567.890-12"}, {$set: {meioPagamentoPadrao: "debito_automatico", bancoDebito: "341", agencia: "1234", contaMascarada: "****5678"}})
-db.pagamentos.updateOne({clienteCpf: "345.678.901-23"}, {$set: {meioPagamentoPadrao: "boleto", emailBoleto: "cliente@email.com", envioAutomatico: true}})
-
-// FIM DO LOTE DE PAGAMENTOS
+db.document.updateMany({"customer.document": "11111111110301", "document.barCode": "000000000000000000000000000000000000000000000301", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900301"}});
+db.document.updateMany({"customer.document": "11111111110302", "document.barCode": "000000000000000000000000000000000000000000000302", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900302"}});
+db.document.updateMany({"customer.document": "11111111110303", "document.barCode": "000000000000000000000000000000000000000000000303", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900303"}});
+db.document.updateMany({"customer.document": "11111111110304", "document.barCode": "000000000000000000000000000000000000000000000304", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900304"}});
+db.document.updateMany({"customer.document": "11111111110305", "document.barCode": "000000000000000000000000000000000000000000000305", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900305"}});
+db.document.updateMany({"customer.document": "11111111110306", "document.barCode": "000000000000000000000000000000000000000000000306", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900306"}});
+db.document.updateMany({"customer.document": "11111111110307", "document.barCode": "000000000000000000000000000000000000000000000307", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900307"}});
+db.document.updateMany({"customer.document": "11111111110308", "document.barCode": "000000000000000000000000000000000000000000000308", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900308"}});
+db.document.updateMany({"customer.document": "11111111110309", "document.barCode": "000000000000000000000000000000000000000000000309", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900309"}});
+db.document.updateMany({"customer.document": "11111111110310", "document.barCode": "000000000000000000000000000000000000000000000310", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900310"}});
+db.document.updateMany({"customer.document": "11111111110311", "document.barCode": "000000000000000000000000000000000000000000000311", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900311"}});
+db.document.updateMany({"customer.document": "11111111110312", "document.barCode": "000000000000000000000000000000000000000000000312", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900312"}});
+db.document.updateMany({"customer.document": "11111111110313", "document.barCode": "000000000000000000000000000000000000000000000313", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900313"}});
+db.document.updateMany({"customer.document": "11111111110314", "document.barCode": "000000000000000000000000000000000000000000000314", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900314"}});
+db.document.updateMany({"customer.document": "11111111110315", "document.barCode": "000000000000000000000000000000000000000000000315", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900315"}});
+db.document.updateMany({"customer.document": "11111111110316", "document.barCode": "000000000000000000000000000000000000000000000316", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900316"}});
+db.document.updateMany({"customer.document": "11111111110317", "document.barCode": "000000000000000000000000000000000000000000000317", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900317"}});
+db.document.updateMany({"customer.document": "11111111110318", "document.barCode": "000000000000000000000000000000000000000000000318", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900318"}});
+db.document.updateMany({"customer.document": "11111111110319", "document.barCode": "000000000000000000000000000000000000000000000319", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900319"}});
+db.document.updateMany({"customer.document": "11111111110320", "document.barCode": "000000000000000000000000000000000000000000000320", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900320"}});
+db.document.updateMany({"customer.document": "11111111110321", "document.barCode": "000000000000000000000000000000000000000000000321", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900321"}});
+db.document.updateMany({"customer.document": "11111111110322", "document.barCode": "000000000000000000000000000000000000000000000322", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900322"}});
+db.document.updateMany({"customer.document": "11111111110323", "document.barCode": "000000000000000000000000000000000000000000000323", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900323"}});
+db.document.updateMany({"customer.document": "11111111110324", "document.barCode": "000000000000000000000000000000000000000000000324", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900324"}});
+db.document.updateMany({"customer.document": "11111111110325", "document.barCode": "000000000000000000000000000000000000000000000325", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900325"}});
+db.document.updateMany({"customer.document": "11111111110326", "document.barCode": "000000000000000000000000000000000000000000000326", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900326"}});
+db.document.updateMany({"customer.document": "11111111110327", "document.barCode": "000000000000000000000000000000000000000000000327", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900327"}});
+db.document.updateMany({"customer.document": "11111111110328", "document.barCode": "000000000000000000000000000000000000000000000328", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900328"}});
+db.document.updateMany({"customer.document": "11111111110329", "document.barCode": "000000000000000000000000000000000000000000000329", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900329"}});
+db.document.updateMany({"customer.document": "11111111110330", "document.barCode": "000000000000000000000000000000000000000000000330", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900330"}});
+db.document.updateMany({"customer.document": "11111111110331", "document.barCode": "000000000000000000000000000000000000000000000331", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900331"}});
+db.document.updateMany({"customer.document": "11111111110332", "document.barCode": "000000000000000000000000000000000000000000000332", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900332"}});
+db.document.updateMany({"customer.document": "11111111110333", "document.barCode": "000000000000000000000000000000000000000000000333", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900333"}});
+db.document.updateMany({"customer.document": "11111111110334", "document.barCode": "000000000000000000000000000000000000000000000334", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900334"}});
+db.document.updateMany({"customer.document": "11111111110335", "document.barCode": "000000000000000000000000000000000000000000000335", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900335"}});
+db.document.updateMany({"customer.document": "11111111110336", "document.barCode": "000000000000000000000000000000000000000000000336", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900336"}});
+db.document.updateMany({"customer.document": "11111111110337", "document.barCode": "000000000000000000000000000000000000000000000337", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900337"}});
+db.document.updateMany({"customer.document": "11111111110338", "document.barCode": "000000000000000000000000000000000000000000000338", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900338"}});
+db.document.updateMany({"customer.document": "11111111110339", "document.barCode": "000000000000000000000000000000000000000000000339", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900339"}});
+db.document.updateMany({"customer.document": "11111111110340", "document.barCode": "000000000000000000000000000000000000000000000340", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900340"}});
+db.document.updateMany({"customer.document": "11111111110341", "document.barCode": "000000000000000000000000000000000000000000000341", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900341"}});
+db.document.updateMany({"customer.document": "11111111110342", "document.barCode": "000000000000000000000000000000000000000000000342", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900342"}});
+db.document.updateMany({"customer.document": "11111111110343", "document.barCode": "000000000000000000000000000000000000000000000343", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900343"}});
+db.document.updateMany({"customer.document": "11111111110344", "document.barCode": "000000000000000000000000000000000000000000000344", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900344"}});
+db.document.updateMany({"customer.document": "11111111110345", "document.barCode": "000000000000000000000000000000000000000000000345", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900345"}});
+db.document.updateMany({"customer.document": "11111111110346", "document.barCode": "000000000000000000000000000000000000000000000346", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900346"}});
+db.document.updateMany({"customer.document": "11111111110347", "document.barCode": "000000000000000000000000000000000000000000000347", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900347"}});
+db.document.updateMany({"customer.document": "11111111110348", "document.barCode": "000000000000000000000000000000000000000000000348", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900348"}});
+db.document.updateMany({"customer.document": "11111111110349", "document.barCode": "000000000000000000000000000000000000000000000349", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900349"}});
+db.document.updateMany({"customer.document": "11111111110350", "document.barCode": "000000000000000000000000000000000000000000000350", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900350"}});
+db.document.updateMany({"customer.document": "11111111110351", "document.barCode": "000000000000000000000000000000000000000000000351", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900351"}});
+db.document.updateMany({"customer.document": "11111111110352", "document.barCode": "000000000000000000000000000000000000000000000352", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900352"}});
+db.document.updateMany({"customer.document": "11111111110353", "document.barCode": "000000000000000000000000000000000000000000000353", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900353"}});
+db.document.updateMany({"customer.document": "11111111110354", "document.barCode": "000000000000000000000000000000000000000000000354", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900354"}});
+db.document.updateMany({"customer.document": "11111111110355", "document.barCode": "000000000000000000000000000000000000000000000355", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900355"}});
+db.document.updateMany({"customer.document": "11111111110356", "document.barCode": "000000000000000000000000000000000000000000000356", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900356"}});
+db.document.updateMany({"customer.document": "11111111110357", "document.barCode": "000000000000000000000000000000000000000000000357", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900357"}});
+db.document.updateMany({"customer.document": "11111111110358", "document.barCode": "000000000000000000000000000000000000000000000358", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900358"}});
+db.document.updateMany({"customer.document": "11111111110359", "document.barCode": "000000000000000000000000000000000000000000000359", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900359"}});
+db.document.updateMany({"customer.document": "11111111110360", "document.barCode": "000000000000000000000000000000000000000000000360", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900360"}});

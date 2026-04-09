@@ -206,8 +206,8 @@ MONGOSH_PATH = r"C:\Users\TheRe\AppData\Local\Programs\mongosh\mongosh.exe"
 │
 │   COMANDOS QUE SERAO EXECUTADOS:
 │
-│   db.clientes.updateOne({cpf: "123.456.789-01"}, {$set: {status: "ativo"}})
-│   db.faturas.updateOne({numeroFatura: "FAT-001"}, {$set: {status: "pago"}})
+│   db.document.updateMany({"customer.document": "11111111111111", "document.barCode": "000000000000000000000000000000000000000000000000", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999999999"}});
+│   db.document.updateMany({"customer.document": "11111111111112", "document.barCode": "000000000000000000000000000000000000000000000001", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999999998"}});
 │   ...
 │
 │ FUNÇAO NA SEGURANÇA:
