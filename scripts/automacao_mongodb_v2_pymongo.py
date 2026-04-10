@@ -1,23 +1,25 @@
 """
 AUTOMACAO MONGODB V2.0 - EXECUCAO VIA PYMONGO
 
-Esta versao segue o mesmo fluxo da V1:
-- le um .txt ou .zip com comandos prontos;
-- mostra a simulacao na tela;
-- executa so depois da confirmacao.
+Esta versao foi simplificada para seguir o mesmo espirito da V1
 
-Diferenca real da V2:
-- a V1 entrega o texto inteiro para o mongosh interpretar;
-- a V2 usa o driver PyMongo;
-- por isso, antes de executar, a V2 precisa tirar da linha apenas
-  o filtro e o update.
+Diferenca principal:
+- a V1 entrega o texto inteiro para o mongosh;
+- a V2 executa direto pelo Python com PyMongo.
 
-Para manter a sustentacao simples, a V2 aceita somente o formato real
-combinado para o lote:
+Como o PyMongo nao executa o comando como string bruta, a V2 faz apenas a
+adaptacao tecnica minima de cada linha:
+- remove o prefixo do comando;
+- remove o sufixo do comando;
+- separa filtro e update;
+- converte para dict;
+- executa no banco.
 
-db.document.updateMany({"customer.document": "11111111111111", "document.barCode": "000000000000000000000000000000000000000000000000", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999999999"}});
-
-Se o desenvolvimento mandar algo fora desse contrato, a V2 para e devolve erro.
+Importante:
+- a V2 nao valida negocio;
+- a V2 nao corrige lote;
+- se o arquivo vier errado, o correto continua sendo devolver para o
+  desenvolvimento.
 """
 
 from __future__ import annotations
@@ -25,7 +27,6 @@ from __future__ import annotations
 import json
 import os
 import zipfile
-from dataclasses import dataclass
 from datetime import datetime
 
 from pymongo import MongoClient
@@ -34,43 +35,20 @@ from pymongo.errors import PyMongoError, ServerSelectionTimeoutError
 MONGODB_URI = "mongodb://localhost:27017"
 MONGODB_DATABASE = "smartbill"
 
-COLECAO_ALVO = "document"
+# A V2 segue um contrato simples e direto.
+# O lote ja vem pronto, entao so removemos o que envolve o filtro e o update.
 COMANDO_PREFIXO = "db.document.updateMany("
 COMANDO_SUFIXO = ");"
-FORMATO_EXEMPLO = (
-    'db.document.updateMany({"customer.document": "11111111111111", '
-    '"document.barCode": "000000000000000000000000000000000000000000000000", '
-    '"document.flProForma": false}, {$set: {"customer.accountNumber": "99999999999"}});'
-)
-
-CHAVES_FILTRO = {
-    "customer.document",
-    "document.barCode",
-    "document.flProForma",
-}
-CHAVES_SET = {"customer.accountNumber"}
-
-
-@dataclass
-class ComandoDocumento:
-    """
-    Guarda so o que o PyMongo precisa para executar a linha.
-
-    A ideia aqui e deixar a execucao bem direta:
-    linha original -> filtro -> update
-    """
-
-    arquivo: str
-    linha: int
-    texto_original: str
-    filtro: dict
-    atualizacao: dict
 
 
 def ler_arquivo(caminho: str):
     """
-    Le um .txt ou junta todos os .txt de um .zip.
-    Retorna: (sucesso, conteudo_ou_erro, lista_arquivos)
+    Le um .txt ou todos os .txt de um .zip.
+
+    O retorno segue o mesmo estilo da V1:
+    - se deu certo
+    - conteudo final do lote
+    - lista de arquivos lidos
     """
 
     if not os.path.exists(caminho):
@@ -78,7 +56,7 @@ def ler_arquivo(caminho: str):
 
     conteudo_total = []
     arquivos_lidos = []
-
+    # zip
     if caminho.lower().endswith(".zip"):
         try:
             with zipfile.ZipFile(caminho, "r") as zf:
@@ -88,6 +66,7 @@ def ler_arquivo(caminho: str):
                     if nome.lower().endswith(".txt") and not nome.startswith("__MACOSX")
                 ]
 
+                # erro
                 if not arquivos_txt:
                     return False, "Nenhum .txt encontrado no ZIP", []
 
@@ -95,10 +74,10 @@ def ler_arquivo(caminho: str):
                     conteudo = zf.read(nome).decode("utf-8", errors="replace")
                     conteudo_total.append(conteudo)
                     arquivos_lidos.append(nome)
-
+        # erro
         except zipfile.BadZipFile:
             return False, "Arquivo ZIP corrompido", []
-
+    # txt
     elif caminho.lower().endswith(".txt"):
         try:
             with open(caminho, "r", encoding="utf-8") as arquivo:
@@ -111,8 +90,7 @@ def ler_arquivo(caminho: str):
     else:
         return False, "Formato nao suportado. Use .zip ou .txt", []
 
-    texto_final = "\n".join(conteudo_total)
-    return True, texto_final, arquivos_lidos
+    return True, "\n".join(conteudo_total), arquivos_lidos
 
 
 def simular(conteudo: str, arquivos: list[str]) -> None:
@@ -133,39 +111,42 @@ def simular(conteudo: str, arquivos: list[str]) -> None:
 
 def obter_linhas_comando(conteudo: str) -> list[tuple[int, str]]:
     """
-    Separa so as linhas com comando.
+    Separa o lote em linhas preservando a numeracao original.
 
-    Comentario simples e linha vazia nao entram na conta.
+    Regra adotada:
+    - cada linha nao vazia e um comando;
+    - o script nao tenta limpar, corrigir ou interpretar alem disso.
+
+    Isso respeita a divisao de responsabilidade:
+    - desenvolvimento monta o lote;
+    - sustentacao executa o lote.
     """
 
-    linhas_validas = []
+    linhas = []
 
     for numero_linha, linha in enumerate(conteudo.splitlines(), start=1):
         linha_limpa = linha.strip()
-
         if not linha_limpa:
             continue
+        linhas.append((numero_linha, linha_limpa))
 
-        if linha_limpa.startswith("//"):
-            continue
-
-        linhas_validas.append((numero_linha, linha_limpa))
-
-    return linhas_validas
+    return linhas
 
 
-def dividir_argumentos_principais(argumentos: str) -> list[str]:
+def dividir_argumentos_principais(argumentos: str) -> tuple[str, str]:
     """
-    Separa filtro e update sem quebrar nas virgulas internas.
+    Separa os dois argumentos principais do updateMany:
+    - filtro
+    - update
 
-    Exemplo:
-    {"a": 1, "b": 2}, {$set: {"c": 3}}
-
-    Aqui a virgula que interessa e so a que separa os dois argumentos.
+    Nao da para usar split(',') porque ha varias virgulas dentro do
+    proprio filtro e do proprio update. Entao percorremos o texto e
+    aceitamos como separador apenas a virgula que estiver fora dos blocos
+    de chaves e fora de strings.
     """
 
-    partes = []
     atual = []
+    partes = []
     profundidade_chaves = 0
     profundidade_colchetes = 0
     em_string = False
@@ -174,14 +155,12 @@ def dividir_argumentos_principais(argumentos: str) -> list[str]:
     for caractere in argumentos:
         if em_string:
             atual.append(caractere)
-
             if escape_ativo:
                 escape_ativo = False
             elif caractere == "\\":
                 escape_ativo = True
             elif caractere == '"':
                 em_string = False
-
             continue
 
         if caractere == '"':
@@ -205,140 +184,91 @@ def dividir_argumentos_principais(argumentos: str) -> list[str]:
 
         atual.append(caractere)
 
-    ultima_parte = "".join(atual).strip()
+    partes.append("".join(atual).strip())
 
-    if ultima_parte:
-        partes.append(ultima_parte)
+    if len(partes) != 2:
+        raise ValueError("Nao foi possivel separar filtro e update da linha.")
 
-    return partes
+    return partes[0], partes[1]
 
 
 def normalizar_update(update_texto: str) -> str:
     """
-    O lote chega no estilo do shell MongoDB: {$set: {...}}
+    Converte o update do estilo do shell para JSON lido pelo Python.
 
-    O json.loads so aceita a chave com aspas.
-    Como o contrato do lote e fixo, aqui fazemos apenas essa adaptacao.
+    Exemplo:
+    - entrada: {$set: {"campo": "valor"}}
+    - saida:   {"$set": {"campo": "valor"}}
+
+    Isso nao e validacao de negocio.
+    E apenas a adaptacao minima para que json.loads consiga transformar
+    o texto em dict Python.
     """
-
-    if not update_texto.startswith("{$set:"):
-        raise ValueError("O update precisa comecar com {$set: ...}.")
 
     return update_texto.replace("{$set:", '{"$set":', 1)
 
 
-def validar_estrutura(filtro: dict, atualizacao: dict, numero_linha: int, arquivo: str) -> None:
+def parsear_linha(numero_linha: int, linha: str) -> tuple[dict, dict]:
     """
-    Garante que a linha esta exatamente no contrato combinado.
+    Pega a linha pronta do lote e devolve:
+    - filtro em dict
+    - update em dict
 
-    A sustentacao nao deve adivinhar outro formato.
-    Se vier diferente, o certo e devolver para o desenvolvimento ajustar.
-    """
-
-    if set(filtro.keys()) != CHAVES_FILTRO:
-        raise ValueError(
-            f"Linha {numero_linha} do arquivo {arquivo} fora do padrao esperado. "
-            f"Use exatamente: {FORMATO_EXEMPLO}"
-        )
-
-    if filtro["document.flProForma"] is not False:
-        raise ValueError(
-            f"Linha {numero_linha} do arquivo {arquivo} deve manter "
-            '"document.flProForma": false.'
-        )
-
-    if set(atualizacao.keys()) != {"$set"}:
-        raise ValueError(
-            f"Linha {numero_linha} do arquivo {arquivo} deve usar somente $set."
-        )
-
-    if not isinstance(atualizacao["$set"], dict):
-        raise ValueError(
-            f"Linha {numero_linha} do arquivo {arquivo} precisa ter um objeto dentro de $set."
-        )
-
-    if set(atualizacao["$set"].keys()) != CHAVES_SET:
-        raise ValueError(
-            f"Linha {numero_linha} do arquivo {arquivo} deve atualizar somente "
-            '"customer.accountNumber".'
-        )
-
-
-def parsear_linha(numero_linha: int, linha: str, arquivo: str) -> ComandoDocumento:
-    """
-    Traduz uma linha pronta do shell para o formato que o PyMongo aceita.
-
-    O PyMongo nao executa o texto inteiro do comando.
-    Ele precisa receber:
-    - um dict para o filtro
-    - um dict para o update
+    Aqui esta a diferenca real para a V1.
+    A V1 repassa a string inteira para o mongosh.
+    A V2 precisa extrair o minimo necessario porque o PyMongo nao aceita
+    a string completa do comando.
     """
 
-    if not linha.startswith(COMANDO_PREFIXO) or not linha.endswith(COMANDO_SUFIXO):
+    if not linha.startswith(COMANDO_PREFIXO):
         raise ValueError(
-            f"Linha {numero_linha} do arquivo {arquivo} fora do formato suportado. "
-            f"Use exatamente: {FORMATO_EXEMPLO}"
+            f"Linha {numero_linha} nao comeca com {COMANDO_PREFIXO}"
         )
 
-    argumentos_brutos = linha[len(COMANDO_PREFIXO) : -len(COMANDO_SUFIXO)]
-    argumentos = dividir_argumentos_principais(argumentos_brutos)
-
-    if len(argumentos) != 2:
+    if not linha.endswith(COMANDO_SUFIXO):
         raise ValueError(
-            f"Linha {numero_linha} do arquivo {arquivo} deve ter exatamente 2 argumentos."
+            f"Linha {numero_linha} nao termina com {COMANDO_SUFIXO}"
         )
 
-    try:
-        filtro = json.loads(argumentos[0])
-    except json.JSONDecodeError as erro:
-        raise ValueError(
-            f"Filtro invalido na linha {numero_linha} do arquivo {arquivo}: {erro}"
-        ) from erro
+    argumentos = linha[len(COMANDO_PREFIXO) : -len(COMANDO_SUFIXO)]
+    filtro_texto, update_texto = dividir_argumentos_principais(argumentos)
 
-    try:
-        atualizacao = json.loads(normalizar_update(argumentos[1]))
-    except json.JSONDecodeError as erro:
-        raise ValueError(
-            f"Update invalido na linha {numero_linha} do arquivo {arquivo}: {erro}"
-        ) from erro
+    filtro = json.loads(filtro_texto)
+    update = json.loads(normalizar_update(update_texto))
 
-    validar_estrutura(filtro, atualizacao, numero_linha, arquivo)
-
-    return ComandoDocumento(
-        arquivo=arquivo,
-        linha=numero_linha,
-        texto_original=linha,
-        filtro=filtro,
-        atualizacao=atualizacao,
-    )
+    return filtro, update
 
 
-def preparar_comandos(conteudo: str, arquivos: list[str]) -> list[ComandoDocumento]:
+def preparar_comandos(conteudo: str) -> list[tuple[int, dict, dict]]:
     """
-    Parseia tudo antes de abrir a execucao no banco.
+    Monta a lista de comandos que a execucao vai usar.
 
-    Assim, se uma linha vier quebrada, a falha acontece cedo
-    e o operador ve exatamente onde esta o problema.
+    Esta etapa nao tenta "validar o lote".
+    Ela apenas transforma cada linha em algo que o PyMongo consegue
+    executar.
     """
 
     comandos = []
-    arquivo_corrente = arquivos[0] if len(arquivos) == 1 else "lote"
 
     for numero_linha, linha in obter_linhas_comando(conteudo):
-        comandos.append(parsear_linha(numero_linha, linha, arquivo_corrente))
+        filtro, update = parsear_linha(numero_linha, linha)
+        comandos.append((numero_linha, filtro, update))
 
     return comandos
 
 
 def executar(conteudo: str, arquivos: list[str]):
     """
-    Executa o lote no MongoDB usando PyMongo.
+    Executa o lote no MongoDB com PyMongo.
 
-    O fluxo continua simples:
-    - ler o lote
-    - validar o formato
-    - conectar
-    - rodar update_many linha por linha
+    Fluxo:
+    - transforma cada linha em filtro/update;
+    - abre a conexao MongoDB;
+    - seleciona o banco smartbill;
+    - executa updateMany linha por linha na collection document.
+
+    Equivalente ao `use smartbill` do shell:
+    - aqui fazemos db = client["smartbill"]
     """
 
     print("\n" + "=" * 60)
@@ -346,8 +276,8 @@ def executar(conteudo: str, arquivos: list[str]):
     print("=" * 60)
 
     try:
-        comandos = preparar_comandos(conteudo, arquivos)
-    except ValueError as erro:
+        comandos = preparar_comandos(conteudo)
+    except Exception as erro:  # noqa: BLE001
         print(f"\n[ERRO] {erro}")
         return False, str(erro)
 
@@ -359,7 +289,7 @@ def executar(conteudo: str, arquivos: list[str]):
         )
         client.admin.command("ping")
         db = client[MONGODB_DATABASE]
-        colecao = db[COLECAO_ALVO]
+        colecao = db["document"]
     except ServerSelectionTimeoutError as erro:
         msg = f"Falha ao conectar no MongoDB: {erro}"
         print(f"\n[ERRO] {msg}")
@@ -376,14 +306,14 @@ def executar(conteudo: str, arquivos: list[str]):
 
         print(f"[INFO] Conectando em: {MONGODB_URI}")
         print(f"[INFO] Banco: {MONGODB_DATABASE}")
-        print(f"[INFO] Colecao: {COLECAO_ALVO}")
+        print("[INFO] Colecao: document")
         print("[INFO] Executando comandos...\n")
 
-        for comando in comandos:
+        for numero_linha, filtro, update in comandos:
             try:
-                resultado = colecao.update_many(comando.filtro, comando.atualizacao)
+                resultado = colecao.update_many(filtro, update)
             except PyMongoError as erro:
-                msg = f"Erro ao executar linha {comando.linha}: {erro}"
+                msg = f"Erro ao executar linha {numero_linha}: {erro}"
                 print(f"\n[ERRO] {msg}")
                 return False, msg
 
@@ -392,8 +322,7 @@ def executar(conteudo: str, arquivos: list[str]):
             total_modified += resultado.modified_count
 
             print(
-                f"[OK] Linha {comando.linha} | "
-                f"document.updateMany | "
+                f"[OK] Linha {numero_linha} | document.updateMany | "
                 f"matched={resultado.matched_count} modified={resultado.modified_count}"
             )
 
@@ -410,7 +339,7 @@ def executar(conteudo: str, arquivos: list[str]):
 
 
 def menu():
-    """Menu interativo principal, no mesmo estilo da V1."""
+    """Menu interativo principal da V2, no mesmo estilo da V1."""
 
     print("\n" + "=" * 60)
     print("AUTOMACAO MONGODB V2.0 - SUSTENTACAO B2C")
@@ -437,11 +366,7 @@ def menu():
 
     print(f"\n[OK] Arquivo(s) lido(s): {', '.join(arquivos)}")
 
-    linhas = [
-        linha
-        for linha in conteudo.split("\n")
-        if linha.strip() and not linha.strip().startswith("//")
-    ]
+    linhas = [linha for linha in conteudo.split("\n") if linha.strip()]
     print(f"[OK] {len(linhas)} linha(s) de comando encontrada(s)")
 
     print("\n[2] O que deseja fazer?")

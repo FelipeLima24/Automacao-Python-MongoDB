@@ -1,0 +1,181 @@
+COMANDOS RAPIDOS MONGODB
+=======================
+
+CONEXAO E CONTEXTO
+------------------
+mongosh
+Abre o shell MongoDB
+
+use smartbill
+Seleciona o banco
+
+show dbs
+Lista bancos
+
+show collections
+Lista colecoes
+
+db
+Mostra banco atual
+
+
+CONSULTA
+--------
+db.document.find()
+Busca varios documentos
+
+db.document.findOne()
+Busca um documento
+
+db.document.find({...})
+Busca com filtro
+
+db.document.find({...}).pretty()
+Busca formatada
+
+db.document.countDocuments({})
+Conta documentos
+
+db.document.find({}, {campo: 1, _id: 0})
+Seleciona campos
+
+db.document.find().limit(10)
+Limita quantidade
+
+db.document.find().sort({campo: 1})
+Ordena crescente
+
+db.document.find().sort({campo: -1})
+Ordena decrescente
+
+
+INSERT
+------
+db.document.insertOne({...})
+Insere um documento
+
+db.document.insertMany([{...}, {...}])
+Insere varios documentos
+
+
+UPDATE
+------
+db.document.updateOne({...}, {$set: {...}})
+Atualiza um
+
+db.document.updateMany({...}, {$set: {...}})
+Atualiza varios
+
+db.document.updateOne({...}, {$inc: {campo: 1}})
+Incrementa valor
+
+db.document.updateOne({...}, {$unset: {campo: ""}})
+Remove campo
+
+db.document.updateOne({...}, {$push: {lista: valor}})
+Adiciona em array
+
+db.document.updateOne({...}, {$pull: {lista: valor}})
+Remove de array
+
+db.document.replaceOne({...}, {...})
+Substitui documento inteiro
+
+
+DELETE
+------
+db.document.deleteOne({...})
+Remove um
+
+db.document.deleteMany({...})
+Remove varios
+
+
+FILTROS COMUNS
+--------------
+{campo: "valor"}
+Igualdade
+
+{campo: {$ne: "valor"}}
+Diferente
+
+{campo: {$gt: 10}}
+Maior que
+
+{campo: {$gte: 10}}
+Maior ou igual
+
+{campo: {$lt: 10}}
+Menor que
+
+{campo: {$lte: 10}}
+Menor ou igual
+
+{campo: {$in: ["A", "B"]}}
+Dentro da lista
+
+{campo: {$nin: ["A", "B"]}}
+Fora da lista
+
+{campo: {$exists: true}}
+Campo existe
+
+{$and: [{...}, {...}]}
+AND explicito
+
+{$or: [{...}, {...}]}
+OR
+
+
+OPERADORES DE UPDATE
+--------------------
+$set
+Define valor
+
+$inc
+Incrementa numero
+
+$unset
+Remove campo
+
+$push
+Adiciona item em array
+
+$pull
+Remove item de array
+
+$min
+Mantem menor valor
+
+$max
+Mantem maior valor
+
+
+VALIDACAO RAPIDA
+----------------
+db.document.countDocuments({...})
+Ver se filtro acha algo
+
+db.document.findOne({...})
+Ver exemplo real
+
+db.document.updateMany({...}, {$set: {...}})
+Executar update em massa
+
+
+ANALOGIA COM SQL
+----------------
+find
+SELECT
+
+insertOne / insertMany
+INSERT
+
+updateOne / updateMany
+UPDATE
+
+deleteOne / deleteMany
+DELETE
+
+countDocuments
+COUNT

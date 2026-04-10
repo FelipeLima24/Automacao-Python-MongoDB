@@ -93,6 +93,8 @@ Os arquivos podem vir como:
 - `.zip` com varios `.txt`
 
 Cada linha util do lote contem um comando MongoDB completo.
+Na V2, cada linha nao vazia e tratada como comando. O script nao tenta
+descobrir comentario, corrigir texto ou ajustar logica do lote.
 
 Formato padrao utilizado nos exemplos atuais:
 
@@ -135,7 +137,7 @@ Executar:
 ## Diagnostico importante validado neste projeto
 
 Um problema real apareceu durante os testes:
-- o arquivo `queries_exemplo.txt` executava updates em `db.document`;
+- o arquivo `testes/exemplos_document/queries_exemplo.txt` executava updates em `db.document`;
 - mas o banco carregado inicialmente tinha apenas `clientes`, `contratos`, `faturas` e `pagamentos`;
 - a collection `document` estava vazia.
 
@@ -208,7 +210,10 @@ O `59` ocorreu porque a primeira linha ja tinha sido atualizada num teste anteri
 
 - `scripts/automacao_mongodb_v1.py`
 - `scripts/automacao_mongodb_v2_pymongo.py`
-- `queries_exemplo.txt`
+- `testes/exemplos_document/queries_exemplo.txt`
+- `testes/exemplos_document/queries_exemplo_2.txt`
+- `testes/exemplos_document/lote_exemplo.zip`
+- `testes/exemplos_document/lote_exemplo_2.zip`
 - `MEMORIA_PROJETO.md`
 - `DOCUMENTACAO_TECNICA.txt`
 - `requirements.txt`
