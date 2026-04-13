@@ -1,4 +1,4 @@
-# Automacao MongoDB - Sustentacao B2C
+﻿# Automacao MongoDB - Sustentacao B2C
 
 ## Visao geral
 
@@ -33,7 +33,7 @@ Arquivo:
 - `scripts/automacao_mongodb_v2_pymongo.py`
 
 Resumo:
-- mantém o menu simples da V1;
+- mantÃ©m o menu simples da V1;
 - le `.txt` e `.zip`;
 - simula ou executa;
 - usa `pymongo` em vez de `mongosh`;
@@ -137,7 +137,7 @@ Executar:
 ## Diagnostico importante validado neste projeto
 
 Um problema real apareceu durante os testes:
-- o arquivo `testes/exemplos_document/queries_exemplo.txt` executava updates em `db.document`;
+- o arquivo `testes/queries_exemplo.txt` executava updates em `db.document`;
 - mas o banco carregado inicialmente tinha apenas `clientes`, `contratos`, `faturas` e `pagamentos`;
 - a collection `document` estava vazia.
 
@@ -202,18 +202,18 @@ Resultado validado:
 - `60` comandos lidos;
 - `60` comandos encontrados;
 - `matched = 60`;
-- `modified = 59`.
+- `modified = 60` na primeira execucao.
 
-O `59` ocorreu porque a primeira linha ja tinha sido atualizada num teste anterior.
+Quando o mesmo lote roda de novo sem resetar a base, o esperado passa a ser `modified = 0`, porque os valores ja estao gravados.
 
 ## Arquivos principais
 
 - `scripts/automacao_mongodb_v1.py`
 - `scripts/automacao_mongodb_v2_pymongo.py`
-- `testes/exemplos_document/queries_exemplo.txt`
-- `testes/exemplos_document/queries_exemplo_2.txt`
-- `testes/exemplos_document/lote_exemplo.zip`
-- `testes/exemplos_document/lote_exemplo_2.zip`
+- `testes/queries_exemplo.txt`
+- `testes/queries_exemplo_2.txt`
+- `testes/lote_exemplo.zip`
+- `testes/lote_exemplo_2.zip`
 - `MEMORIA_PROJETO.md`
 - `DOCUMENTACAO_TECNICA.txt`
 - `requirements.txt`
@@ -225,3 +225,5 @@ O `59` ocorreu porque a primeira linha ja tinha sido atualizada num teste anteri
 3. Se `matchedCount = 0`, o problema costuma ser massa ou filtro, nao sintaxe.
 4. Se a collection do arquivo nao existir, o lote nao vai produzir efeito.
 5. Nao altere a V1 quando estiver estudando a V2; use as duas como comparacao.
+
+

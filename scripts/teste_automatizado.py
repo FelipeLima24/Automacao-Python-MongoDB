@@ -1,4 +1,4 @@
-"""
+﻿"""
 Script auxiliar para execucao automatizada de testes.
 Executa o script principal sem interacao manual.
 """
@@ -102,7 +102,7 @@ if __name__ == "__main__":
     print("=" * 60)
 
     # Caminho do arquivo ZIP
-    caminho_zip = r"c:\Users\TheRe\OneDrive\Documentos\Automacao-Python-MongoDB\testes\lotes\lote_sustentacao_abril_2026.zip"
+    caminho_zip = r"c:\Users\TheRe\OneDrive\Documentos\Automacao-Python-MongoDB\testes\lote_exemplo.zip"
 
     print(f"\n[INFO] Lendo arquivo: {caminho_zip}")
 
@@ -125,3 +125,4 @@ if __name__ == "__main__":
     print("=" * 60)
 
     sys.exit(0 if sucesso else 1)
+
