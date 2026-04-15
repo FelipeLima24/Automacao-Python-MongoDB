@@ -1,229 +1,91 @@
-﻿# Automacao MongoDB - Sustentacao B2C
+# Automacao MongoDB - Sustentacao B2C
 
-## Visao geral
+## Objetivo do projeto
 
-Este projeto automatiza a execucao de lotes de update no MongoDB a partir de arquivos `.txt` ou `.zip`.
+Este projeto executa updates em massa no MongoDB a partir de lotes enviados pelo time de desenvolvimento.
 
-O processo real da area e:
-- o desenvolvimento envia comandos MongoDB prontos;
-- a sustentacao recebe o lote;
-- a sustentacao simula, executa e valida o resultado.
+O foco e operacional:
+- execucao automatica;
+- execucao recorrente;
+- uso via Control-M;
+- sem interacao humana.
 
-O banco alvo do projeto e `smartbill`.
+## Contexto da area
 
-## Versoes do projeto
+Na rotina de Sustentacao de Faturamento B2C, o desenvolvimento envia um arquivo .zip.
+Dentro desse .zip existem um ou mais .txt, e cada linha do .txt ja chega com comando pronto.
 
-### V1
+Exemplo de linha:
 
-Arquivo:
-- `scripts/automacao_mongodb_v1.py`
+db.document.updateMany({...}, {$set: {...}});
 
-Resumo:
-- preservada sem alteracoes estruturais;
-- le `.txt` e `.zip`;
-- simula ou executa;
-- usa `mongosh`.
+A sustentacao nao altera regra de negocio. Apenas executa o lote.
 
-Uso ideal:
-- quando voce quer o caminho mais parecido com o processo manual.
+## Como o script funciona
 
-### V2
+1. Usa um caminho fixo de entrada.
+2. Identifica se a entrada e .zip ou .txt.
+3. Se for .zip, extrai os .txt para pasta temporaria.
+4. Le os comandos linha por linha.
+5. Faz a adaptacao tecnica minima para PyMongo.
+6. Conecta no MongoDB.
+7. Executa os updates no banco smartbill, collection document.
+8. Registra log de inicio, volume, sucesso/erro por comando e fim.
 
-Arquivo:
-- `scripts/automacao_mongodb_v2_pymongo.py`
+## Fluxo de execucao batch
 
-Resumo:
-- mantÃ©m o menu simples da V1;
-- le `.txt` e `.zip`;
-- simula ou executa;
-- usa `pymongo` em vez de `mongosh`;
-- executa `updateOne` e `updateMany` a partir do formato padronizado do lote.
+O script foi feito para agendador e por isso:
+- nao possui menu;
+- nao usa input();
+- nao pede confirmacao;
+- retorna codigo 0 em sucesso e 1 em falha.
 
-Uso ideal:
-- quando voce quer executar direto pelo Python, sem shell externo.
+## Adaptacao PyMongo (explicacao simples)
 
-## Pre-requisitos
+O comando do arquivo chega no formato do shell MongoDB:
 
-- Python 3.x
-- ambiente virtual `venv`
-- MongoDB acessivel em `mongodb://localhost:27017`
-- banco `smartbill`
+db.document.updateMany(filtro, update);
 
-Para a V1:
-- `mongosh` instalado
+O PyMongo nao executa esse texto completo.
+Ele precisa receber:
 
-Para a V2:
-- `pymongo` instalado na `venv`
+collection.update_many(filtro_dict, update_dict)
 
-## Instalacao
+Por isso a V2 faz apenas o necessario:
+- remove prefixo e sufixo do comando;
+- separa filtro e update;
+- converte texto para dict;
+- chama update_many.
 
-Criar e ativar a `venv`:
+Isso e adaptacao tecnica, nao validacao de negocio.
+
+## Como rodar localmente
+
+Ativar ambiente:
 
 ```powershell
 python -m venv venv
 .\venv\Scripts\Activate.ps1
-```
-
-Instalar dependencias:
-
-```powershell
 python -m pip install -r requirements.txt
 ```
 
-## Dependencias
-
-Arquivo:
-- `requirements.txt`
-
-Dependencia atual:
-- `pymongo==4.6.0`
-
-Uso:
-- driver oficial MongoDB para Python;
-- necessario para a V2.
-
-Observacao:
-- a V1 nao usa biblioteca externa Python para o banco;
-- ela depende do `mongosh`, que deve estar instalado separadamente.
-
-## Formato do lote
-
-Os arquivos podem vir como:
-- `.txt` unico
-- `.zip` com varios `.txt`
-
-Cada linha util do lote contem um comando MongoDB completo.
-Na V2, cada linha nao vazia e tratada como comando. O script nao tenta
-descobrir comentario, corrigir texto ou ajustar logica do lote.
-
-Formato padrao utilizado nos exemplos atuais:
-
-```javascript
-db.document.updateMany({"customer.document": "11111111110001", "document.barCode": "000000000000000000000000000000000000000000000001", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900001"}});
-```
-
-## Como executar
-
-### V1
-
-```powershell
-python .\scripts\automacao_mongodb_v1.py
-```
-
-### V2
+Executar:
 
 ```powershell
 python .\scripts\automacao_mongodb_v2_pymongo.py
 ```
 
-Ou, para evitar confusao com Python global:
-
-```powershell
-.\venv\Scripts\python.exe .\scripts\automacao_mongodb_v2_pymongo.py
-```
-
-## Diferenca entre simular e executar
-
-Simular:
-- le o lote;
-- mostra o conteudo;
-- nao altera o banco.
-
-Executar:
-- conecta no MongoDB;
-- aponta para `smartbill`;
-- executa todos os updates do lote.
-
-## Diagnostico importante validado neste projeto
-
-Um problema real apareceu durante os testes:
-- o arquivo `testes/queries_exemplo.txt` executava updates em `db.document`;
-- mas o banco carregado inicialmente tinha apenas `clientes`, `contratos`, `faturas` e `pagamentos`;
-- a collection `document` estava vazia.
-
-Resultado no `mongosh`:
-
-```javascript
-{
-  acknowledged: true,
-  matchedCount: 0,
-  modifiedCount: 0
-}
-```
-
-Isso nao significa que a query estava errada.
-Significa apenas que nenhum documento foi encontrado pelo filtro.
-
-## Como verificar no mongosh
-
-Entrar no shell:
-
-```powershell
-mongosh
-```
-
-Selecionar o banco:
-
-```javascript
-use smartbill
-```
-
-Ver collections:
-
-```javascript
-show collections
-```
-
-Contar documentos da collection esperada:
-
-```javascript
-db.document.countDocuments({})
-```
-
-Testar o filtro antes do update:
-
-```javascript
-db.document.countDocuments({
-  "customer.document": "11111111110001",
-  "document.barCode": "000000000000000000000000000000000000000000000001",
-  "document.flProForma": false
-})
-```
-
-Interpretacao:
-- `0`: o update nao vai alterar nada;
-- `> 0`: existe ao menos um documento compativel.
-
-## Resultado validado
-
-A V2 foi testada contra o Mongo local em Docker com massa compativel em `db.document`.
-
-Resultado validado:
-- `60` comandos lidos;
-- `60` comandos encontrados;
-- `matched = 60`;
-- `modified = 60` na primeira execucao.
-
-Quando o mesmo lote roda de novo sem resetar a base, o esperado passa a ser `modified = 0`, porque os valores ja estao gravados.
-
 ## Arquivos principais
 
-- `scripts/automacao_mongodb_v1.py`
-- `scripts/automacao_mongodb_v2_pymongo.py`
-- `testes/queries_exemplo.txt`
-- `testes/queries_exemplo_2.txt`
-- `testes/lote_exemplo.zip`
-- `testes/lote_exemplo_2.zip`
-- `MEMORIA_PROJETO.md`
-- `DOCUMENTACAO_TECNICA.txt`
-- `requirements.txt`
+- scripts/automacao_mongodb_v2_pymongo.py
+- testes/lote_mvp_teste.txt
+- testes/lote_mvp_teste.zip
+- logs/automacao_mongodb_v2.log
 
-## Regras praticas para nao se perder
+## Limitacoes do MVP
 
-1. Se a V2 acusar `No module named pymongo`, voce esta usando o Python errado.
-2. Sempre rode a V2 pela `venv`.
-3. Se `matchedCount = 0`, o problema costuma ser massa ou filtro, nao sintaxe.
-4. Se a collection do arquivo nao existir, o lote nao vai produzir efeito.
-5. Nao altere a V1 quando estiver estudando a V2; use as duas como comparacao.
-
-
+- nao cria comandos;
+- nao valida regra de negocio;
+- nao corrige lote recebido;
+- nao implementa rollback ou transacao;
+- trabalha apenas com comandos no padrao updateMany esperado.

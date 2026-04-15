@@ -1,282 +1,113 @@
-DOCUMENTACAO TECNICA - AUTOMACAO MONGODB
-=======================================
+DOCUMENTACAO TECNICA - AUTOMACAO MONGODB V2
+===========================================
 
-1. OBJETIVO
------------
+1. ESCOPO
+---------
 
-Este projeto automatiza a leitura e a execucao de lotes MongoDB para a
-operacao de sustentacao B2C.
+Este repositorio contem apenas a V2 operacional.
 
-Existem duas versoes:
-- V1: usa mongosh
-- V2: usa pymongo
-
-A V1 foi preservada.
-A V2 foi simplificada para ficar mais proxima do processo real e mais
-facil de explicar.
+Premissas:
+- execucao batch;
+- sem interacao humana;
+- uso recorrente via Control-M;
+- foco em executar lote recebido.
 
 
-2. DIFERENCA ENTRE V1 E V2
---------------------------
-
-V1
-- le o lote
-- mostra simulacao
-- monta um script temporario
-- adiciona `use smartbill;`
-- entrega tudo para o mongosh
-
-V2
-- le o lote
-- mostra simulacao
-- adapta cada linha para o formato que o PyMongo aceita
-- abre conexao direto no Python
-- executa updateMany no banco
-
-Explicacao didatica:
-
-Na V1:
-- o Python organiza o lote
-- o mongosh interpreta o comando
-
-Na V2:
-- o Python organiza o lote
-- o Python tambem executa
-
-Analogia com Java:
-- V1 lembra gerar um script e mandar um cliente externo executar
-- V2 lembra abrir uma conexao JDBC e chamar a operacao direto
-
-
-3. POR QUE O PYMONGO NAO ACEITA A STRING DO COMANDO
----------------------------------------------------
-
-Exemplo de linha do arquivo:
-
-db.document.updateMany({"customer.document": "11111111111111", "document.barCode": "000000000000000000000000000000000000000000000000", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999999999"}});
-
-Essa linha funciona no shell MongoDB porque o shell entende esse formato.
-
-O PyMongo funciona de outro jeito.
-Ele nao recebe o comando inteiro como texto.
-Ele precisa receber chamadas Python, por exemplo:
-
-- collection: `document`
-- filtro: dict Python
-- update: dict Python
-
-Na pratica, o PyMongo espera algo conceitualmente assim:
-
-colecao.update_many(filtro, update)
-
-Por isso a V2 precisa extrair:
-- filtro
-- update
-
-Importante:
-- isso nao e validacao de negocio
-- isso nao e correção do lote
-- isso e apenas adaptacao tecnica para o driver
-
-
-4. FORMATO DO LOTE
-------------------
-
-Formato suportado pela V2:
-
-db.document.updateMany({"customer.document": "11111111110001", "document.barCode": "000000000000000000000000000000000000000000000001", "document.flProForma": false}, {$set: {"customer.accountNumber": "99999900001"}});
-
-Regras adotadas:
-- um comando por linha
-- a linha termina com ;
-- cada linha nao vazia e tratada como comando
-- a sustentacao nao corrige nem higieniza o lote
-
-
-5. FLUXO DA V2
---------------
+2. FLUXO TECNICO
+----------------
 
 Passo 1
-- o usuario informa um `.txt` ou `.zip`
+- ler arquivo de entrada fixo.
 
 Passo 2
-- o script le o lote
+- se for .zip, extrair e localizar .txt.
 
 Passo 3
-- o script pode mostrar simulacao
+- ler linhas nao vazias de cada .txt.
 
 Passo 4
-- na execucao, cada linha nao vazia e lida como comando
+- para cada linha, adaptar do formato shell para formato PyMongo.
 
 Passo 5
-- a V2 remove:
-  - prefixo: `db.document.updateMany(`
-  - sufixo: `);`
+- conectar no MongoDB e executar update_many.
 
 Passo 6
-- a V2 separa o que sobrou em:
-  - filtro
-  - update
-
-Passo 7
-- a V2 converte o texto em dict Python
-
-Passo 8
-- a V2 abre:
-  `client = MongoClient(...)`
-
-Passo 9
-- a V2 seleciona o banco:
-  `db = client["smartbill"]`
-
-Passo 10
-- a V2 executa:
-  `db["document"].update_many(filtro, update)`
+- registrar logs de inicio, volume, sucesso/erro por comando e fim.
 
 
-6. FUNCOES DO PROJETO
----------------------
-
-Esta secao evita repeticao.
-As funcoes comuns aparecem uma vez.
-Depois aparecem as funcoes exclusivas de cada versao.
-
-
-6.1 FUNCOES COMUNS ENTRE V1 E V2
---------------------------------
-
-ler_arquivo(caminho)
-- le `.txt` ou `.zip`
-- junta o conteudo
-- devolve o lote final e a lista de arquivos
-
-simular(conteudo, arquivos)
-- mostra o lote na tela
-- nao altera o banco
-
-menu()
-- organiza o fluxo interativo
-- pede caminho
-- pergunta se o usuario quer simular ou executar
-- pede confirmacao antes da execucao real
-
-
-6.2 FUNCAO EXCLUSIVA DA V1
---------------------------
-
-executar(conteudo)
-- adiciona `use smartbill;`
-- grava um `.js` temporario
-- chama o mongosh
-- deixa a interpretacao do lote com o shell do MongoDB
-
-
-6.3 FUNCOES EXCLUSIVAS DA V2
-----------------------------
-
-obter_linhas_comando(conteudo)
-- ignora apenas linhas vazias
-- trata cada linha nao vazia como comando
-- preserva o numero da linha para rastreabilidade
-
-dividir_argumentos_principais(argumentos)
-- separa filtro e update
-- nao usa `split(",")` simples, porque ha virgulas dentro do filtro e do update
-
-normalizar_update(update_texto)
-- converte o `$set` do estilo do shell para JSON lido pelo Python
-- exemplo:
-  - shell: `{$set: {"campo": "valor"}}`
-  - Python: `{"$set": {"campo": "valor"}}`
-
-parsear_linha(numero_linha, linha)
-- remove prefixo e sufixo da linha
-- separa filtro e update
-- faz `json.loads`
-- devolve dois dicts:
-  - filtro
-  - update
-
-preparar_comandos(conteudo)
-- percorre todas as linhas do lote
-- chama `parsear_linha` para cada uma
-- monta a lista final que sera executada
-
-executar(conteudo, arquivos)
-- abre a conexao com MongoDB
-- seleciona `smartbill`
-- usa `db["document"]`
-- executa `update_many` linha por linha
-- imprime `matched` e `modified`
-
-
-7. O QUE FOI REMOVIDO DA V2
+3. ADAPTACAO TECNICA MINIMA
 ---------------------------
 
-Para simplificar a V2, foram removidos:
-- validacao detalhada de estrutura
-- validacao de chaves esperadas
-- validacao de conteudo da linha
-- tentativa de corrigir lote
-- protecoes extras que nao pertencem a sustentacao
+Entrada do lote:
 
-O que ficou:
-- leitura do lote
-- adaptacao tecnica minima
-- execucao no MongoDB
+db.document.updateMany({...}, {$set: {...}});
 
+Problema:
+- PyMongo nao executa comando shell em texto bruto.
 
-8. DESCOBERTA IMPORTANTE DOS TESTES
------------------------------------
+Formato exigido pelo driver:
 
-Durante os testes, os updates pareciam falhar.
+collection.update_many(filtro_dict, update_dict)
 
-Resultado observado:
+Adaptacao aplicada:
+- remover prefixo db.document.updateMany(;
+- remover sufixo );
+- separar filtro e update;
+- converter para dict via json.loads;
+- chamar update_many.
 
-{
-  acknowledged: true,
-  matchedCount: 0,
-  modifiedCount: 0
-}
-
-Isso nao significava erro da V2.
-Significava que o filtro nao encontrava documentos.
-
-Causa real encontrada:
-- o arquivo de exemplo atualizava `db.document`
-- a massa antiga do banco tinha outras collections
-- `db.document` estava vazia
-
-Conclusao:
-- o script pode estar certo
-- e ainda assim nao alterar nada, se o filtro nao encontrar documento
+Importante:
+- isso e adaptacao tecnica;
+- nao e validacao de negocio.
 
 
-9. VALIDACAO REALIZADA
-----------------------
+4. DIVISAO FILTRO/UPDATE
+------------------------
 
-Ambiente validado:
-- container Docker: mongo-teste
-- porta: 27017
-- banco: smartbill
+Nao usamos split(',') simples.
 
-Foi inserida massa compativel na collection `document`.
+Motivo:
+- existem varias virgulas internas dentro de filtro e update.
 
-Depois disso, a V2 foi executada com sucesso contra o lote de exemplo.
+Estrategia:
+- percorrer texto caractere a caractere;
+- controlar profundidade de chaves e colchetes;
+- ignorar virgulas dentro de strings;
+- quebrar apenas na virgula do nivel principal.
 
 
-10. RECOMENDACOES DE APRESENTACAO
---------------------------------
+5. LOGS OPERACIONAIS
+--------------------
 
-Se alguem perguntar "por que a V2 precisa dessas funcoes?", a resposta curta e:
+Arquivo:
+- logs/automacao_mongodb_v2.log
 
-- porque o PyMongo nao executa a string inteira do shell
-- ele precisa receber filtro e update separados
-- entao a V2 faz apenas a adaptacao tecnica minima
+Eventos:
+- INICIO_EXECUCAO;
+- quantidade de arquivos .txt;
+- quantidade de comandos;
+- COMANDO_OK / COMANDO_ERRO por linha;
+- RESUMO_EXECUCAO;
+- FIM_EXECUCAO.
 
-Se alguem perguntar "isso nao e validacao demais?", a resposta e:
 
-- nao
-- a V2 nao valida regra de negocio
-- ela apenas transforma texto em objetos Python
-- o lote continua sendo responsabilidade do desenvolvimento
+6. ERRO E CODIGO DE SAIDA
+-------------------------
+
+Comportamento:
+- 0 quando lote termina sem erro;
+- 1 em falha.
+
+Em erro de comando:
+- registra erro com arquivo/linha;
+- encerra lote para evitar execucao parcial silenciosa.
+
+
+7. LIMITES DO MVP
+-----------------
+
+O script nao faz:
+- validacao de regra de negocio;
+- correcao de comando;
+- rollback;
+- parser fora do contrato do updateMany esperado.

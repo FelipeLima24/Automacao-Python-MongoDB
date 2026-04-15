@@ -1,5 +1,1 @@
-# V1 usa apenas biblioteca padrao do Python e depende do mongosh instalado.
-# V2 demonstra uma abordagem direta via driver Python.
-
-# Driver oficial MongoDB para Python.
 pymongo==4.6.0
