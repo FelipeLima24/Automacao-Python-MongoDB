@@ -1,4 +1,4 @@
-# Automacao MongoDB - Sustentacao B2C
+# Automacao MongoDB 
 
 ## Objetivo do projeto
 
@@ -9,17 +9,6 @@ O foco e operacional:
 - execucao recorrente;
 - uso via Control-M;
 - sem interacao humana.
-
-## Contexto da area
-
-Na rotina de Sustentacao de Faturamento B2C, o desenvolvimento envia um arquivo .zip.
-Dentro desse .zip existem um ou mais .txt, e cada linha do .txt ja chega com comando pronto.
-
-Exemplo de linha:
-
-db.document.updateMany({...}, {$set: {...}});
-
-A sustentacao nao altera regra de negocio. Apenas executa o lote.
 
 ## Como o script funciona
 
@@ -51,7 +40,7 @@ Ele precisa receber:
 
 collection.update_many(filtro_dict, update_dict)
 
-Por isso a V2 faz apenas o necessario:
+Por isso a V3 faz apenas o necessario:
 - remove prefixo e sufixo do comando;
 - separa filtro e update;
 - converte texto para dict;
